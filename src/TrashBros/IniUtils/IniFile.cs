@@ -69,7 +69,7 @@ namespace TrashBros.IniUtils
         /// <param name="key">The key.</param>
         /// <param name="defaultValue">The default value.</param>
         /// <returns>The value.</returns>
-        public string Get(string section, string key, string defaultValue = "")
+        public string GetValue(string section, string key, string defaultValue = "")
         {
             StringBuilder sb = new StringBuilder(MaxValueSize);
             _ = NativeMethods.GetPrivateProfileString(section, key, defaultValue, sb, sb.Capacity, _fileName);
@@ -82,7 +82,7 @@ namespace TrashBros.IniUtils
         /// <param name="section">The section.</param>
         /// <param name="key">The key.</param>
         /// <param name="value">The value.</param>
-        public void Set(string section, string key, string value)
+        public void SetValue(string section, string key, string value)
         {
             NativeMethods.WritePrivateProfileString(section, key, value, _fileName);
         }

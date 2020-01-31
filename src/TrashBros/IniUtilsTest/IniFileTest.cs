@@ -20,7 +20,7 @@ namespace IniUtilsTest
             var iniFile = new IniFile(fileName);
 
             // Set a value
-            iniFile.Set("global", "color", "purple");
+            iniFile.SetValue("global", "color", "purple");
 
             // Verify that the file was created
             Assert.True(File.Exists(fileName));
@@ -41,7 +41,7 @@ namespace IniUtilsTest
             var iniFile = new IniFile(fileName);
 
             // Get the value
-            string color = iniFile.Get("global", "color");
+            string color = iniFile.GetValue("global", "color");
 
             // Verify that the file was created
             Assert.Equal("purple", color);

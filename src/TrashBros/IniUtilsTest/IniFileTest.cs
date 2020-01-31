@@ -70,5 +70,24 @@ namespace IniUtilsTest
             // Clean up after ourselves
             File.Delete(fileName);
         }
+
+        [Fact]
+        public void DefaultIsReturnedIfNotFound()
+        {
+            // Create a simple ini file with one value
+            string fileName = Path.GetTempFileName();
+
+            // Create a new IniFile with the temp file name
+            var iniFile = new IniFile(fileName);
+
+            // Get the value, specifying a default
+            string color = iniFile.GetValue("global", "color", "purple");
+
+            // Verify that the value is correct
+            color.Should().Be("purple");
+
+            // Clean up after ourselves
+            File.Delete(fileName);
+        }
     }
 }

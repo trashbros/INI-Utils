@@ -1,6 +1,7 @@
 using Xunit;
 using TrashBros.IniUtils;
 using System.IO;
+using FluentAssertions;
 
 namespace IniUtilsTest
 {
@@ -14,7 +15,7 @@ namespace IniUtilsTest
             File.Delete(fileName);
 
             // Verify that the file isn't there
-            Assert.False(File.Exists(fileName));
+            File.Exists(fileName).Should().BeFalse();
 
             // Create a new IniFile with the temp file name
             var iniFile = new IniFile(fileName);
@@ -23,7 +24,7 @@ namespace IniUtilsTest
             iniFile.SetValue("global", "color", "purple");
 
             // Verify that the file was created
-            Assert.True(File.Exists(fileName));
+            File.Exists(fileName).Should().BeTrue();
 
             // Clean up after ourselves
             File.Delete(fileName);
@@ -44,11 +45,30 @@ namespace IniUtilsTest
             string color = iniFile.GetValue("global", "color");
 
             // Verify that the file was created
-            Assert.Equal("purple", color);
+            color.Should().Be("purple");
 
             // Clean up after ourselves
             File.Delete(fileName);
         }
 
+        [Fact]
+        public void CanSetAValue()
+        {
+            // Create a new temporary file to get a temp file name and delete it
+            string fileName = Path.GetTempFileName();
+            File.Delete(fileName);
+
+            // Create a new IniFile with the temp file name
+            var iniFile = new IniFile(fileName);
+
+            // Set a value
+            iniFile.SetValue("global", "color", "purple");
+
+            // Verify that the file matches what is expected
+            File.ReadAllLines(fileName).Should().BeEquivalentTo(new string[] { "[global]", "color=purple" });
+
+            // Clean up after ourselves
+            File.Delete(fileName);
+        }
     }
 }

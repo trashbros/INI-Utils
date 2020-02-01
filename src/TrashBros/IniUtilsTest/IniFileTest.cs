@@ -11,33 +11,36 @@ namespace IniUtilsTest
     {
         #region Public Methods
 
-        [Fact]
-        public void CanGetAValue()
+        [Theory]
+        [InlineData("purple", null)]
+        [InlineData("   purple", "purple")]
+        [InlineData("purple   ", "purple")]
+        [InlineData("a", null)]
+        [InlineData("", null)]
+        [InlineData("  ", "")]
+        [InlineData("This is a value with spaces!", null)]
+        [InlineData("This is a value with [square brackets]", null)]
+        [InlineData("This is a value with ; semi-colors ;", null)]
+        [InlineData("This is a value with = equal signs =", null)]
+        [InlineData("\"Double quotes\"", "Double quotes")]
+        [InlineData("\'Single quotes\'", "Single quotes")]
+        [InlineData("\"  Double quotes  \"", "  Double quotes  ")]
+        [InlineData("\'  Single quotes  \'", "  Single quotes  ")]
+        [InlineData("\"Unmatched double", null)]
+        [InlineData("\'Unmatched single", null)]
+        [InlineData("Unmatched double\"", null)]
+        [InlineData("Unmatched single\'", null)]
+        [InlineData("\"\"", "")]
+        [InlineData("\'\'", "")]
+        [InlineData("\"", null)]
+        [InlineData("\'", null)]
+        [InlineData("\"Mixed quotes\'", null)]
+        [InlineData("\'Mixed quotes\"", null)]
+        public void CanGetKeyValuePairs(string value, string expected)
         {
             // Create a simple ini file with one value
             string fileName = Path.GetTempFileName();
-            string[] lines = { "[global]", "color=purple" };
-            File.WriteAllLines(fileName, lines);
-
-            // Create a new IniFile with the temp file name
-            var iniFile = new IniFile(fileName);
-
-            // Get the value
-            string color = iniFile.GetValue("global", "color");
-
-            // Verify that the file was created
-            color.Should().Be("purple");
-
-            // Clean up after ourselves
-            File.Delete(fileName);
-        }
-
-        [Fact]
-        public void CanGetKeyValuePairs()
-        {
-            // Create a simple ini file with one value
-            string fileName = Path.GetTempFileName();
-            string[] lines = { "[global]", "color=purple", "name=sam" };
+            string[] lines = { "[global]", $"color={value}", "name=sam" };
             File.WriteAllLines(fileName, lines);
 
             // Create a new IniFile with the temp file name
@@ -50,9 +53,54 @@ namespace IniUtilsTest
             keyValuePairs.Should()
                 .BeEquivalentTo(new List<KeyValuePair<string, string>>()
                 {
-                    new KeyValuePair<string, string>("color", "purple"),
+                    new KeyValuePair<string, string>("color", expected ?? value),
                     new KeyValuePair<string, string>("name", "sam")
                 });
+
+            // Clean up after ourselves
+            File.Delete(fileName);
+        }
+
+        [Theory]
+        [InlineData("purple", null)]
+        [InlineData("   purple", "purple")]
+        [InlineData("purple   ", "purple")]
+        [InlineData("a", null)]
+        [InlineData("", null)]
+        [InlineData("  ", "")]
+        [InlineData("This is a value with spaces!", null)]
+        [InlineData("This is a value with [square brackets]", null)]
+        [InlineData("This is a value with ; semi-colors ;", null)]
+        [InlineData("This is a value with = equal signs =", null)]
+        [InlineData("\"Double quotes\"", "Double quotes")]
+        [InlineData("\'Single quotes\'", "Single quotes")]
+        [InlineData("\"  Double quotes  \"", "  Double quotes  ")]
+        [InlineData("\'  Single quotes  \'", "  Single quotes  ")]
+        [InlineData("\"Unmatched double", null)]
+        [InlineData("\'Unmatched single", null)]
+        [InlineData("Unmatched double\"", null)]
+        [InlineData("Unmatched single\'", null)]
+        [InlineData("\"\"", "")]
+        [InlineData("\'\'", "")]
+        [InlineData("\"", null)]
+        [InlineData("\'", null)]
+        [InlineData("\"Mixed quotes\'", null)]
+        [InlineData("\'Mixed quotes\"", null)]
+        public void CanGetValues(string value, string expected)
+        {
+            // Create a simple ini file with one value
+            string fileName = Path.GetTempFileName();
+            string[] lines = { "[global]", $"color={value}" };
+            File.WriteAllLines(fileName, lines);
+
+            // Create a new IniFile with the temp file name
+            var iniFile = new IniFile(fileName);
+
+            // Get the value
+            string color = iniFile.GetValue("global", "color");
+
+            // Verify that the file was created
+            color.Should().Be(expected ?? value);
 
             // Clean up after ourselves
             File.Delete(fileName);
@@ -78,8 +126,32 @@ namespace IniUtilsTest
             File.Delete(fileName);
         }
 
-        [Fact]
-        public void DefaultIsReturnedIfNotFound()
+        [Theory]
+        [InlineData("purple")]
+        [InlineData("   purple")]
+        [InlineData("purple   ")]
+        [InlineData("a")]
+        [InlineData("")]
+        [InlineData("  ")]
+        [InlineData("This is a value with spaces!")]
+        [InlineData("This is a value with [square brackets]")]
+        [InlineData("This is a value with ; semi-colors ;")]
+        [InlineData("This is a value with = equal signs =")]
+        [InlineData("\"Double quotes\"")]
+        [InlineData("\'Single quotes\'")]
+        [InlineData("\"  Double quotes  \"")]
+        [InlineData("\'  Single quotes  \'")]
+        [InlineData("\"Unmatched double")]
+        [InlineData("\'Unmatched single")]
+        [InlineData("Unmatched double\"")]
+        [InlineData("Unmatched single\'")]
+        [InlineData("\"\"")]
+        [InlineData("\'\'")]
+        [InlineData("\"")]
+        [InlineData("\'")]
+        [InlineData("\"Mixed quotes\'")]
+        [InlineData("\'Mixed quotes\"")]
+        public void DefaultIsReturnedIfNotFound(string value)
         {
             // Create a simple ini file with one value
             string fileName = Path.GetTempFileName();
@@ -88,10 +160,10 @@ namespace IniUtilsTest
             var iniFile = new IniFile(fileName);
 
             // Get the value, specifying a default
-            string color = iniFile.GetValue("global", "color", "purple");
+            string color = iniFile.GetValue("global", "color", $"{value}");
 
             // Verify that the value is correct
-            color.Should().Be("purple");
+            color.Should().Be(value.TrimEnd());
 
             // Clean up after ourselves
             File.Delete(fileName);

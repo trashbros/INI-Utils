@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.InteropServices;
@@ -125,7 +125,17 @@ namespace TrashBros.IniUtils
                 // Set the value
                 if (keyValue.Length > 1)
                 {
-                    value = keyValue[1];
+                    value = string.Join("=", keyValue.Skip(1).ToArray());
+
+                    if (value.Length > 1 && value[0] == '\'' && value[value.Length - 1] == '\'')
+                    {
+                        value = value.Substring(1, value.Length - 2);
+                    }
+
+                    if (value.Length > 1 && value[0] == '\"' && value[value.Length - 1] == '\"')
+                    {
+                        value = value.Substring(1, value.Length - 2);
+                    }
                 }
 
                 // Add the key/value pair to the list

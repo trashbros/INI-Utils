@@ -1,4 +1,6 @@
-﻿using System.Runtime.InteropServices;
+﻿using System.Collections.Generic;
+using System.Linq;
+using System.Runtime.InteropServices;
 using System.Text;
 
 namespace TrashBros.IniUtils
@@ -27,7 +29,10 @@ namespace TrashBros.IniUtils
             #region Internal Methods
 
             [DllImport("kernel32.dll", CharSet = CharSet.Unicode)]
-            internal static extern uint GetPrivateProfileString(string lpAppName, string lpKeyName, string lpDefault, StringBuilder lpReturnedString, int nSize, string lpFileName);
+            internal static extern int GetPrivateProfileSection(string lpAppName, char[] lpReturnedChars, int nSize, string lpFileName);
+
+            [DllImport("kernel32.dll", CharSet = CharSet.Unicode)]
+            internal static extern int GetPrivateProfileString(string lpAppName, string lpKeyName, string lpDefault, StringBuilder lpReturnedString, int nSize, string lpFileName);
 
             [DllImport("kernel32.dll", CharSet = CharSet.Unicode)]
             internal static extern bool WritePrivateProfileString(string lpAppName, string lpKeyName, string lpString, string lpFileName);
@@ -61,6 +66,50 @@ namespace TrashBros.IniUtils
         #endregion Public Constructors
 
         #region Public Methods
+
+        /// <summary>
+        /// Gets the key/value pairs in the specified section.
+        /// </summary>
+        /// <param name="section">The section.</param>
+        /// <returns>The key value pairs.</returns>
+        public List<KeyValuePair<string, string>> GetKeyValuePairs(string section)
+        {
+            // Initialize list of key/value pairs
+            var keyValuePairs = new List<KeyValuePair<string, string>>();
+
+            // Read the key/value pairs from the INI file
+            char[] lpReturnedChars = new char[32767];
+            int num = NativeMethods.GetPrivateProfileSection(section, lpReturnedChars, 32767, _fileName);
+
+            // Make sure something was actually found
+            if (num < 3) return keyValuePairs;
+
+            // Create an array of strings from the returned characters
+            string[] pairStrings = new string(lpReturnedChars.Take(num - 1).ToArray()).Split('\0');
+
+            // Parse each pair string into a KeyValuePair and add it to the list
+            foreach (string pair in pairStrings)
+            {
+                string[] keyValue = pair.Split('=');
+
+                string key = "";
+                string value = "";
+
+                if (keyValue.Length > 0)
+                {
+                    key = keyValue[0];
+                }
+
+                if (keyValue.Length > 1)
+                {
+                    value = keyValue[1];
+                }
+
+                keyValuePairs.Add(new KeyValuePair<string, string>(key, value));
+            }
+
+            return keyValuePairs;
+        }
 
         /// <summary>
         /// Gets the value of the specified key in the specified section.

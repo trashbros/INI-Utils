@@ -1,34 +1,14 @@
-using Xunit;
-using TrashBros.IniUtils;
-using System.IO;
 using FluentAssertions;
+using System.Collections.Generic;
+using System.IO;
+using TrashBros.IniUtils;
+using Xunit;
 
 namespace IniUtilsTest
 {
     public class IniFileTest
     {
-        [Fact]
-        public void SettingAValueCreatesANewFile()
-        {
-            // Create a new temporary file to get a temp file name and delete it
-            string fileName = Path.GetTempFileName();
-            File.Delete(fileName);
-
-            // Verify that the file isn't there
-            File.Exists(fileName).Should().BeFalse();
-
-            // Create a new IniFile with the temp file name
-            var iniFile = new IniFile(fileName);
-
-            // Set a value
-            iniFile.SetValue("global", "color", "purple");
-
-            // Verify that the file was created
-            File.Exists(fileName).Should().BeTrue();
-
-            // Clean up after ourselves
-            File.Delete(fileName);
-        }
+        #region Public Methods
 
         [Fact]
         public void CanGetAValue()
@@ -46,6 +26,32 @@ namespace IniUtilsTest
 
             // Verify that the file was created
             color.Should().Be("purple");
+
+            // Clean up after ourselves
+            File.Delete(fileName);
+        }
+
+        [Fact]
+        public void CanGetKeyValuePairs()
+        {
+            // Create a simple ini file with one value
+            string fileName = Path.GetTempFileName();
+            string[] lines = { "[global]", "color=purple", "name=sam" };
+            File.WriteAllLines(fileName, lines);
+
+            // Create a new IniFile with the temp file name
+            var iniFile = new IniFile(fileName);
+
+            // Get all the key/value pairs from the global section
+            var keyValuePairs = iniFile.GetKeyValuePairs("global");
+
+            // Verify that all the pairs were returned
+            keyValuePairs.Should()
+                .BeEquivalentTo(new List<KeyValuePair<string, string>>()
+                {
+                    new KeyValuePair<string, string>("color", "purple"),
+                    new KeyValuePair<string, string>("name", "sam")
+                });
 
             // Clean up after ourselves
             File.Delete(fileName);
@@ -89,5 +95,30 @@ namespace IniUtilsTest
             // Clean up after ourselves
             File.Delete(fileName);
         }
+
+        [Fact]
+        public void SettingAValueCreatesANewFile()
+        {
+            // Create a new temporary file to get a temp file name and delete it
+            string fileName = Path.GetTempFileName();
+            File.Delete(fileName);
+
+            // Verify that the file isn't there
+            File.Exists(fileName).Should().BeFalse();
+
+            // Create a new IniFile with the temp file name
+            var iniFile = new IniFile(fileName);
+
+            // Set a value
+            iniFile.SetValue("global", "color", "purple");
+
+            // Verify that the file was created
+            File.Exists(fileName).Should().BeTrue();
+
+            // Clean up after ourselves
+            File.Delete(fileName);
+        }
+
+        #endregion Public Methods
     }
 }

@@ -87,7 +87,7 @@ namespace TrashBros.IniUtils
             }
             else
             {
-                File.WriteAllText(_fileName, "", Encoding.Unicode);
+                File.WriteAllBytes(_fileName, Encoding.Unicode.GetPreamble());
             }
         }
 
@@ -185,7 +185,7 @@ namespace TrashBros.IniUtils
         /// </summary>
         /// <param name="section">The section.</param>
         /// <returns>The key value pairs.</returns>
-        public List<KeyValuePair<string, string>> ReadSettingsFromSection(string section)
+        public List<KeyValuePair<string, string>> ReadSettings(string section)
         {
             // Initialize list of settings
             var settings = new List<KeyValuePair<string, string>>();
@@ -261,7 +261,7 @@ namespace TrashBros.IniUtils
         /// </summary>
         /// <param name="section">The section.</param>
         /// <param name="settings">The settings.</param>
-        public void WriteSettingsToSection(string section, List<KeyValuePair<string, string>> settings)
+        public void WriteSettings(string section, List<KeyValuePair<string, string>> settings)
         {
             CheckForNull(section, nameof(section));
             CheckForNull(settings, nameof(settings));

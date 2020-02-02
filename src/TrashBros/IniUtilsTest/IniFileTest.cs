@@ -96,7 +96,7 @@ namespace IniUtilsTest
             var iniFile = new IniFile(fileName);
 
             // Get all settings from the global section
-            var settings = iniFile.ReadSettingsFromSection("global");
+            var settings = iniFile.ReadSettings("global");
 
             // Verify that all the settings were returned
             settings.Should()
@@ -196,7 +196,7 @@ namespace IniUtilsTest
             settings.Add(new KeyValuePair<string, string>("name", "sam"));
 
             // Write the settings to the global section
-            iniFile.WriteSettingsToSection("global", settings);
+            iniFile.WriteSettings("global", settings);
 
             // Verify that the file contains the settings
             File.ReadAllLines(fileName).Should().Contain(new string[] { "[global]", $"color={value}", "name=sam" });

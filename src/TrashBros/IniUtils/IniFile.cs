@@ -5,6 +5,8 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
 
+using Setting = System.Collections.Generic.KeyValuePair<string, string>;
+
 namespace TrashBros.IniUtils
 {
     /// <summary>
@@ -167,7 +169,7 @@ namespace TrashBros.IniUtils
         /// <param name="defaultValue">The default value.</param>
         /// <returns>The value.</returns>
         /// <exception cref="ArgumentNullException">If section or key is null.</exception>
-        public KeyValuePair<string, string> ReadSetting(string section, string key, string defaultValue = "")
+        public Setting ReadSetting(string section, string key, string defaultValue = "")
         {
             CheckForNull(section, nameof(section));
             CheckForNull(key, nameof(key));
@@ -177,7 +179,7 @@ namespace TrashBros.IniUtils
 
             string value = Encoding.Unicode.GetString(lpReturnedString).TrimEnd('\0');
 
-            return new KeyValuePair<string, string>(key, value);
+            return new Setting(key, value);
         }
 
         /// <summary>
@@ -185,10 +187,10 @@ namespace TrashBros.IniUtils
         /// </summary>
         /// <param name="section">The section.</param>
         /// <returns>The key value pairs.</returns>
-        public List<KeyValuePair<string, string>> ReadSettings(string section)
+        public List<Setting> ReadSettings(string section)
         {
             // Initialize list of settings
-            var settings = new List<KeyValuePair<string, string>>();
+            var settings = new List<Setting>();
 
             // Read all the settings from the section into a byte array
             byte[] lpReturnedString = new byte[MaxSize];
@@ -202,7 +204,7 @@ namespace TrashBros.IniUtils
             // Create an array of strings from the returned characters
             string[] pairStrings = new string(settingsString.Take(num - 1).ToArray()).Split('\0');
 
-            // Parse each pair string into a KeyValuePair and add it to the list
+            // Parse each key/value pair string into a setting and add it to the list
             foreach (string pair in pairStrings)
             {
                 // Init key and values to empty strings
@@ -235,7 +237,7 @@ namespace TrashBros.IniUtils
                 }
 
                 // Add the key/value pair to the list
-                settings.Add(new KeyValuePair<string, string>(key, value));
+                settings.Add(new Setting(key, value));
             }
 
             // Return the list of key/value pairs
@@ -247,7 +249,7 @@ namespace TrashBros.IniUtils
         /// </summary>
         /// <param name="section">The section.</param>
         /// <exception cref="ArgumentNullException">If section, key, or value is null.</exception>
-        public void WriteSetting(string section, KeyValuePair<string, string> setting)
+        public void WriteSetting(string section, Setting setting)
         {
             CheckForNull(section, nameof(section));
             CheckForNull(setting.Key, nameof(setting.Key));
@@ -261,7 +263,7 @@ namespace TrashBros.IniUtils
         /// </summary>
         /// <param name="section">The section.</param>
         /// <param name="settings">The settings.</param>
-        public void WriteSettings(string section, List<KeyValuePair<string, string>> settings)
+        public void WriteSettings(string section, List<Setting> settings)
         {
             CheckForNull(section, nameof(section));
             CheckForNull(settings, nameof(settings));

@@ -6,6 +6,8 @@ using System.Text;
 using TrashBros.IniUtils;
 using Xunit;
 
+using Setting = System.Collections.Generic.KeyValuePair<string, string>;
+
 namespace IniUtilsTest
 {
     public class IniFileTest
@@ -100,10 +102,10 @@ namespace IniUtilsTest
 
             // Verify that all the settings were returned
             settings.Should()
-                .BeEquivalentTo(new List<KeyValuePair<string, string>>()
+                .BeEquivalentTo(new List<Setting>()
                 {
-                    new KeyValuePair<string, string>("color", expected ?? value),
-                    new KeyValuePair<string, string>("name", "sam")
+                    new Setting("color", expected ?? value),
+                    new Setting("name", "sam")
                 });
 
             // Clean up after ourselves
@@ -146,7 +148,7 @@ namespace IniUtilsTest
             var iniFile = new IniFile(fileName);
 
             // Write the setting
-            iniFile.WriteSetting("global", new KeyValuePair<string, string>("color", value));
+            iniFile.WriteSetting("global", new Setting("color", value));
 
             // Verify that the file contains the setting we just wrote
             File.ReadAllLines(fileName).Should().Contain(new string[] { "[global]", $"color={value}" });
@@ -191,9 +193,9 @@ namespace IniUtilsTest
             var iniFile = new IniFile(fileName);
 
             // Create a list of settings
-            var settings = new List<KeyValuePair<string, string>>();
-            settings.Add(new KeyValuePair<string, string>("color", value));
-            settings.Add(new KeyValuePair<string, string>("name", "sam"));
+            var settings = new List<Setting>();
+            settings.Add(new Setting("color", value));
+            settings.Add(new Setting("name", "sam"));
 
             // Write the settings to the global section
             iniFile.WriteSettings("global", settings);
@@ -280,7 +282,7 @@ namespace IniUtilsTest
             var iniFile = new IniFile(fileName);
 
             // Create an action that writes a setting with a null key
-            Action action = () => { iniFile.WriteSetting("global", new KeyValuePair<string, string>(null, "purple")); };
+            Action action = () => { iniFile.WriteSetting("global", new Setting(null, "purple")); };
 
             // Verify that exception is thrown
             action.Should().ThrowExactly<ArgumentNullException>();
@@ -299,7 +301,7 @@ namespace IniUtilsTest
             var iniFile = new IniFile(fileName);
 
             // Create an action that writes a setting with a null value
-            Action action = () => { iniFile.WriteSetting("global", new KeyValuePair<string, string>("color", null)); };
+            Action action = () => { iniFile.WriteSetting("global", new Setting("color", null)); };
 
             // Verify that exception is thrown
             action.Should().ThrowExactly<ArgumentNullException>();
@@ -322,7 +324,7 @@ namespace IniUtilsTest
             var iniFile = new IniFile(fileName);
 
             // Write a setting
-            iniFile.WriteSetting("global", new KeyValuePair<string, string>("color", "purple"));
+            iniFile.WriteSetting("global", new Setting("color", "purple"));
 
             // Verify that the file was created
             File.Exists(fileName).Should().BeTrue();

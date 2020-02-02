@@ -6,8 +6,6 @@ using System.Text;
 using TrashBros.IniUtils;
 using Xunit;
 
-using Setting = System.Collections.Generic.KeyValuePair<string, string>;
-
 namespace IniUtilsTest
 {
     public class IniFileTest
@@ -193,9 +191,11 @@ namespace IniUtilsTest
             var iniFile = new IniFile(fileName);
 
             // Create a list of settings
-            var settings = new List<Setting>();
-            settings.Add(new Setting("color", value));
-            settings.Add(new Setting("name", "sam"));
+            var settings = new List<Setting>
+            {
+                new Setting("color", value),
+                new Setting("name", "sam")
+            };
 
             // Write the settings to the global section
             iniFile.WriteSettings("global", settings);

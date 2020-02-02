@@ -5,8 +5,6 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
 
-using Setting = System.Collections.Generic.KeyValuePair<string, string>;
-
 namespace TrashBros.IniUtils
 {
     /// <summary>

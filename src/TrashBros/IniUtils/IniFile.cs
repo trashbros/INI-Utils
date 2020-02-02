@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
@@ -33,11 +34,60 @@ namespace TrashBros.IniUtils
         /// <param name="arg">The argument.</param>
         /// <param name="argName">Name of the argument.</param>
         /// <exception cref="ArgumentNullException">If arg is null.</exception>
-        private static void CheckForNull(string arg, string argName)
+        private static void CheckForNull(object arg, string argName)
         {
             if (arg == null)
             {
                 throw new ArgumentNullException(argName);
+            }
+        }
+
+        /// <summary>
+        /// Converts the INI file to Unicode encoding.
+        /// </summary>
+        private void ConvertFileToUnicodeEncoding()
+        {
+            if (File.Exists(_fileName))
+            {
+                string tempFile = null;
+                try
+                {
+                    using (var reader = new StreamReader(_fileName, true))
+                    {
+                        reader.Peek();
+                        var encoding = reader.CurrentEncoding;
+                        if (encoding != Encoding.Unicode)
+                        {
+                            tempFile = Path.GetTempFileName();
+
+                            using (var writer = new StreamWriter(tempFile, false, Encoding.Unicode))
+                            {
+                                int charsRead;
+                                char[] buffer = new char[1024];
+                                while ((charsRead = reader.ReadBlock(buffer, 0, buffer.Length)) > 0)
+                                {
+                                    writer.Write(buffer, 0, charsRead);
+                                }
+                            }
+                        }
+                    }
+                    if (tempFile != null)
+                    {
+                        File.Delete(_fileName);
+                        File.Move(tempFile, _fileName);
+                    }
+                }
+                finally
+                {
+                    if (tempFile != null)
+                    {
+                        File.Delete(tempFile);
+                    }
+                }
+            }
+            else
+            {
+                File.WriteAllText(_fileName, "", Encoding.Unicode);
             }
         }
 
@@ -71,6 +121,13 @@ namespace TrashBros.IniUtils
             );
 
             [DllImport("kernel32.dll", CharSet = CharSet.Unicode)]
+            internal static extern bool WritePrivateProfileSection(
+                string lpAppName,
+                string lpString,
+                string lpFileName
+            );
+
+            [DllImport("kernel32.dll", CharSet = CharSet.Unicode)]
             internal static extern bool WritePrivateProfileString(
                 string lpAppName,
                 string lpKeyName,
@@ -93,6 +150,8 @@ namespace TrashBros.IniUtils
         public IniFile(string fileName)
         {
             _fileName = fileName;
+
+            ConvertFileToUnicodeEncoding();
         }
 
         #endregion Public Constructors
@@ -187,7 +246,7 @@ namespace TrashBros.IniUtils
         /// Write the setting to the specified section.
         /// </summary>
         /// <param name="section">The section.</param>
-        /// <exception cref="ArgumentNullException">If key or value is null.</exception>
+        /// <exception cref="ArgumentNullException">If section, key, or value is null.</exception>
         public void WriteSetting(string section, KeyValuePair<string, string> setting)
         {
             CheckForNull(section, nameof(section));
@@ -195,6 +254,26 @@ namespace TrashBros.IniUtils
             CheckForNull(setting.Value, nameof(setting.Value));
 
             _ = NativeMethods.WritePrivateProfileString(section, setting.Key, setting.Value, _fileName);
+        }
+
+        /// <summary>
+        /// Writes a list of settings to the specified section.
+        /// </summary>
+        /// <param name="section">The section.</param>
+        /// <param name="settings">The settings.</param>
+        public void WriteSettingsToSection(string section, List<KeyValuePair<string, string>> settings)
+        {
+            CheckForNull(section, nameof(section));
+            CheckForNull(settings, nameof(settings));
+
+            string lpString = string.Empty;
+            foreach (var setting in settings)
+            {
+                lpString += $"{setting.Key}={setting.Value}\0";
+            }
+            lpString += "\0";
+
+            NativeMethods.WritePrivateProfileSection(section, lpString, _fileName);
         }
 
         #endregion Public Methods

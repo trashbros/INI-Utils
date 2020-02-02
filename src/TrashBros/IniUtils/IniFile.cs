@@ -159,32 +159,32 @@ namespace TrashBros.IniUtils
         #region Public Methods
 
         /// <summary>
-        /// Read the setting with the specified key in the specified section. If the setting does
+        /// Read the setting with the specified name in the specified section. If the setting does
         /// not exist, <paramref name="defaultValue"/> will be used.
         /// </summary>
         /// <param name="section">The section.</param>
-        /// <param name="key">The key.</param>
+        /// <param name="name">The name.</param>
         /// <param name="defaultValue">The default value.</param>
         /// <returns>The value.</returns>
-        /// <exception cref="ArgumentNullException">If section or key is null.</exception>
-        public Setting ReadSetting(string section, string key, string defaultValue = "")
+        /// <exception cref="ArgumentNullException">If section or name is null.</exception>
+        public Setting ReadSetting(string section, string name, string defaultValue = "")
         {
             CheckForNull(section, nameof(section));
-            CheckForNull(key, nameof(key));
+            CheckForNull(name, nameof(name));
 
             byte[] lpReturnedString = new byte[MaxSize];
-            _ = NativeMethods.GetPrivateProfileString(section, key, defaultValue, lpReturnedString, MaxSize, _fileName);
+            _ = NativeMethods.GetPrivateProfileString(section, name, defaultValue, lpReturnedString, MaxSize, _fileName);
 
             string value = Encoding.Unicode.GetString(lpReturnedString).TrimEnd('\0');
 
-            return new Setting(key, value);
+            return new Setting(name, value);
         }
 
         /// <summary>
         /// Read all the settings from the specified section.
         /// </summary>
         /// <param name="section">The section.</param>
-        /// <returns>The key value pairs.</returns>
+        /// <returns>The settings.</returns>
         public List<Setting> ReadSettings(string section)
         {
             // Initialize list of settings
@@ -202,26 +202,26 @@ namespace TrashBros.IniUtils
             // Create an array of strings from the returned characters
             string[] pairStrings = new string(settingsString.Take(num - 1).ToArray()).Split('\0');
 
-            // Parse each key/value pair string into a setting and add it to the list
+            // Parse each name/value pair string into a setting and add it to the list
             foreach (string pair in pairStrings)
             {
-                // Init key and values to empty strings
-                string key = "";
+                // Init name and values to empty strings
+                string name = "";
                 string value = "";
 
-                // Split the key/value pair
-                string[] keyValue = pair.Split('=');
+                // Split the name/value pair
+                string[] nameValue = pair.Split('=');
 
-                // Set the key
-                if (keyValue.Length > 0)
+                // Set the name
+                if (nameValue.Length > 0)
                 {
-                    key = keyValue[0];
+                    name = nameValue[0];
                 }
 
                 // Set the value
-                if (keyValue.Length > 1)
+                if (nameValue.Length > 1)
                 {
-                    value = string.Join("=", keyValue.Skip(1).ToArray());
+                    value = string.Join("=", nameValue.Skip(1).ToArray());
 
                     if (value.Length > 1 && value[0] == '\'' && value[value.Length - 1] == '\'')
                     {
@@ -234,11 +234,11 @@ namespace TrashBros.IniUtils
                     }
                 }
 
-                // Add the key/value pair to the list
-                settings.Add(new Setting(key, value));
+                // Add the name/value pair to the list
+                settings.Add(new Setting(name, value));
             }
 
-            // Return the list of key/value pairs
+            // Return the list of name/value pairs
             return settings;
         }
 
@@ -246,14 +246,14 @@ namespace TrashBros.IniUtils
         /// Write the setting to the specified section.
         /// </summary>
         /// <param name="section">The section.</param>
-        /// <exception cref="ArgumentNullException">If section, key, or value is null.</exception>
+        /// <exception cref="ArgumentNullException">If section, name, or value is null.</exception>
         public void WriteSetting(string section, Setting setting)
         {
             CheckForNull(section, nameof(section));
-            CheckForNull(setting.Key, nameof(setting.Key));
+            CheckForNull(setting.Name, nameof(setting.Name));
             CheckForNull(setting.Value, nameof(setting.Value));
 
-            _ = NativeMethods.WritePrivateProfileString(section, setting.Key, setting.Value, _fileName);
+            _ = NativeMethods.WritePrivateProfileString(section, setting.Name, setting.Value, _fileName);
         }
 
         /// <summary>
@@ -269,7 +269,7 @@ namespace TrashBros.IniUtils
             string lpString = string.Empty;
             foreach (var setting in settings)
             {
-                lpString += $"{setting.Key}={setting.Value}\0";
+                lpString += $"{setting.Name}={setting.Value}\0";
             }
             lpString += "\0";
 

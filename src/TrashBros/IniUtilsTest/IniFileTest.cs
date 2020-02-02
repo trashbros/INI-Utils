@@ -52,7 +52,7 @@ namespace IniUtilsTest
             var setting = iniFile.ReadSetting("global", "color");
 
             // Verify that the setting was read correctly
-            setting.Key.Should().Be("color");
+            setting.Name.Should().Be("color");
             setting.Value.Should().Be(expected ?? value);
 
             // Clean up after ourselves
@@ -252,7 +252,7 @@ namespace IniUtilsTest
         }
 
         [Fact]
-        public void ReadWithNullKeyThrowsException()
+        public void ReadWithNullNameThrowsException()
         {
             // Create a simple ini file with one value
             string fileName = Path.GetTempFileName();
@@ -262,7 +262,7 @@ namespace IniUtilsTest
             // Create a new IniFile with the temp file name
             var iniFile = new IniFile(fileName);
 
-            // Create an action that reads a setting with a null key
+            // Create an action that reads a setting with a null name
             Action action = () => { var setting = iniFile.ReadSetting("global", null); };
 
             // Verify that the exception is thrown
@@ -273,7 +273,7 @@ namespace IniUtilsTest
         }
 
         [Fact]
-        public void WriteWithNullKeyThrowsException()
+        public void WriteWithNullNameThrowsException()
         {
             // Create a new temporary file to get a temp file name and delete it
             string fileName = Path.GetTempFileName();
@@ -281,7 +281,7 @@ namespace IniUtilsTest
             // Create a new IniFile with the temp file name
             var iniFile = new IniFile(fileName);
 
-            // Create an action that writes a setting with a null key
+            // Create an action that writes a setting with a null name
             Action action = () => { iniFile.WriteSetting("global", new Setting(null, "purple")); };
 
             // Verify that exception is thrown

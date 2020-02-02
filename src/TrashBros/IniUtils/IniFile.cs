@@ -53,13 +53,30 @@ namespace TrashBros.IniUtils
             #region Internal Methods
 
             [DllImport("kernel32.dll", CharSet = CharSet.Unicode)]
-            internal static extern int GetPrivateProfileSection(string lpAppName, byte[] lpReturnedString, int nSize, string lpFileName);
+            internal static extern int GetPrivateProfileSection(
+                string lpAppName,
+                byte[] lpReturnedString,
+                int nSize,
+                string lpFileName
+            );
 
             [DllImport("kernel32.dll", CharSet = CharSet.Unicode)]
-            internal static extern int GetPrivateProfileString(string lpAppName, string lpKeyName, string lpDefault, byte[] lpReturnedString, int nSize, string lpFileName);
+            internal static extern int GetPrivateProfileString(
+                string lpAppName,
+                string lpKeyName,
+                string lpDefault,
+                byte[] lpReturnedString,
+                int nSize,
+                string lpFileName
+            );
 
             [DllImport("kernel32.dll", CharSet = CharSet.Unicode)]
-            internal static extern bool WritePrivateProfileString(string lpAppName, string lpKeyName, string lpString, string lpFileName);
+            internal static extern bool WritePrivateProfileString(
+                string lpAppName,
+                string lpKeyName,
+                string lpString,
+                string lpFileName
+            );
 
             #endregion Internal Methods
         }

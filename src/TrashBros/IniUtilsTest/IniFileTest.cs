@@ -2,6 +2,7 @@ using FluentAssertions;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Text;
 using TrashBros.IniUtils;
 using Xunit;
 
@@ -36,12 +37,13 @@ namespace IniUtilsTest
         [InlineData("\'", null)]
         [InlineData("\"Mixed quotes\'", null)]
         [InlineData("\'Mixed quotes\"", null)]
+        [InlineData("αβγδε", null)]
         public void CanGetKeyValuePairs(string value, string expected)
         {
             // Create a simple ini file with one value
             string fileName = Path.GetTempFileName();
             string[] lines = { "[global]", $"color={value}", "name=sam" };
-            File.WriteAllLines(fileName, lines);
+            File.WriteAllLines(fileName, lines, Encoding.Unicode);
 
             // Create a new IniFile with the temp file name
             var iniFile = new IniFile(fileName);
@@ -86,12 +88,13 @@ namespace IniUtilsTest
         [InlineData("\'", null)]
         [InlineData("\"Mixed quotes\'", null)]
         [InlineData("\'Mixed quotes\"", null)]
+        [InlineData("αβγδε", null)]
         public void CanGetValues(string value, string expected)
         {
             // Create a simple ini file with one value
             string fileName = Path.GetTempFileName();
             string[] lines = { "[global]", $"color={value}" };
-            File.WriteAllLines(fileName, lines);
+            File.WriteAllLines(fileName, lines, Encoding.Unicode);
 
             // Create a new IniFile with the temp file name
             var iniFile = new IniFile(fileName);
@@ -151,6 +154,7 @@ namespace IniUtilsTest
         [InlineData("\'")]
         [InlineData("\"Mixed quotes\'")]
         [InlineData("\'Mixed quotes\"")]
+        [InlineData("αβγδε")]
         public void DefaultIsReturnedIfNotFound(string value)
         {
             // Create a simple ini file with one value
@@ -175,7 +179,7 @@ namespace IniUtilsTest
             // Create a simple ini file with one value
             string fileName = Path.GetTempFileName();
             string[] lines = { "[global]", "color=purple" };
-            File.WriteAllLines(fileName, lines);
+            File.WriteAllLines(fileName, lines, Encoding.Unicode);
 
             // Create a new IniFile with the temp file name
             var iniFile = new IniFile(fileName);

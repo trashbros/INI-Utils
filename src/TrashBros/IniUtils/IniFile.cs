@@ -7,11 +7,16 @@ using System.Text;
 namespace TrashBros.IniUtils
 {
     /// <summary>
-    /// Represents an INI file that settings can be written and read from.
+    /// Represents an INI file that settings can be written to and read from.
     /// </summary>
     public class IniFile
     {
         #region Private Fields
+
+        /// <summary>
+        /// The maximum size in bytes that can be read or written.
+        /// </summary>
+        private const int MaxSize = 65536;
 
         /// <summary>
         /// The file name of the INI file.
@@ -23,7 +28,7 @@ namespace TrashBros.IniUtils
         #region Private Methods
 
         /// <summary>
-        /// Checks for null and throws exceptions accordingly.
+        /// Checks for null and throws exception accordingly.
         /// </summary>
         /// <param name="arg">The argument.</param>
         /// <param name="argName">Name of the argument.</param>
@@ -48,10 +53,10 @@ namespace TrashBros.IniUtils
             #region Internal Methods
 
             [DllImport("kernel32.dll", CharSet = CharSet.Unicode)]
-            internal static extern int GetPrivateProfileSection(string lpAppName, char[] lpReturnedString, int nSize, string lpFileName);
+            internal static extern int GetPrivateProfileSection(string lpAppName, byte[] lpReturnedString, int nSize, string lpFileName);
 
             [DllImport("kernel32.dll", CharSet = CharSet.Unicode)]
-            internal static extern int GetPrivateProfileString(string lpAppName, string lpKeyName, string lpDefault, StringBuilder lpReturnedString, int nSize, string lpFileName);
+            internal static extern int GetPrivateProfileString(string lpAppName, string lpKeyName, string lpDefault, byte[] lpReturnedString, int nSize, string lpFileName);
 
             [DllImport("kernel32.dll", CharSet = CharSet.Unicode)]
             internal static extern bool WritePrivateProfileString(string lpAppName, string lpKeyName, string lpString, string lpFileName);
@@ -60,15 +65,6 @@ namespace TrashBros.IniUtils
         }
 
         #endregion Internal Classes
-
-        #region Public Fields
-
-        /// <summary>
-        /// The maximum value size in characters that can be used.
-        /// </summary>
-        public const int MaxValueSize = 32767;
-
-        #endregion Public Fields
 
         #region Public Constructors
 
@@ -87,24 +83,48 @@ namespace TrashBros.IniUtils
         #region Public Methods
 
         /// <summary>
-        /// Gets the key/value pairs in the specified section.
+        /// Read the setting with the specified key in the specified section. If the setting does
+        /// not exist, <paramref name="defaultValue"/> will be used.
+        /// </summary>
+        /// <param name="section">The section.</param>
+        /// <param name="key">The key.</param>
+        /// <param name="defaultValue">The default value.</param>
+        /// <returns>The value.</returns>
+        /// <exception cref="ArgumentNullException">If section or key is null.</exception>
+        public KeyValuePair<string, string> ReadSetting(string section, string key, string defaultValue = "")
+        {
+            CheckForNull(section, nameof(section));
+            CheckForNull(key, nameof(key));
+
+            byte[] lpReturnedString = new byte[MaxSize];
+            _ = NativeMethods.GetPrivateProfileString(section, key, defaultValue, lpReturnedString, MaxSize, _fileName);
+
+            string value = Encoding.Unicode.GetString(lpReturnedString).TrimEnd('\0');
+
+            return new KeyValuePair<string, string>(key, value);
+        }
+
+        /// <summary>
+        /// Read all the settings from the specified section.
         /// </summary>
         /// <param name="section">The section.</param>
         /// <returns>The key value pairs.</returns>
-        public List<KeyValuePair<string, string>> GetKeyValuePairs(string section)
+        public List<KeyValuePair<string, string>> ReadSettingsFromSection(string section)
         {
-            // Initialize list of key/value pairs
-            var keyValuePairs = new List<KeyValuePair<string, string>>();
+            // Initialize list of settings
+            var settings = new List<KeyValuePair<string, string>>();
 
-            // Read the key/value pairs from the INI file
-            char[] lpReturnedString = new char[MaxValueSize];
-            int num = NativeMethods.GetPrivateProfileSection(section, lpReturnedString, MaxValueSize, _fileName);
+            // Read all the settings from the section into a byte array
+            byte[] lpReturnedString = new byte[MaxSize];
+            int num = NativeMethods.GetPrivateProfileSection(section, lpReturnedString, MaxSize, _fileName);
+
+            string settingsString = Encoding.Unicode.GetString(lpReturnedString);
 
             // Make sure something was actually found
-            if (num < 3) return keyValuePairs;
+            if (num < 3) return settings;
 
             // Create an array of strings from the returned characters
-            string[] pairStrings = new string(lpReturnedString.Take(num - 1).ToArray()).Split('\0');
+            string[] pairStrings = new string(settingsString.Take(num - 1).ToArray()).Split('\0');
 
             // Parse each pair string into a KeyValuePair and add it to the list
             foreach (string pair in pairStrings)
@@ -139,44 +159,25 @@ namespace TrashBros.IniUtils
                 }
 
                 // Add the key/value pair to the list
-                keyValuePairs.Add(new KeyValuePair<string, string>(key, value));
+                settings.Add(new KeyValuePair<string, string>(key, value));
             }
 
             // Return the list of key/value pairs
-            return keyValuePairs;
+            return settings;
         }
 
         /// <summary>
-        /// Gets the value of the specified key in the specified section.
+        /// Write the setting to the specified section.
         /// </summary>
         /// <param name="section">The section.</param>
-        /// <param name="key">The key.</param>
-        /// <param name="defaultValue">The default value.</param>
-        /// <returns>The value.</returns>
-        /// <exception cref="ArgumentNullException">If key is null.</exception>
-        public string GetValue(string section, string key, string defaultValue = "")
-        {
-            CheckForNull(key, nameof(key));
-
-            StringBuilder sb = new StringBuilder(MaxValueSize);
-            _ = NativeMethods.GetPrivateProfileString(section, key, defaultValue, sb, sb.Capacity, _fileName);
-
-            return sb.ToString();
-        }
-
-        /// <summary>
-        /// Sets the value of the specified key in the specified section.
-        /// </summary>
-        /// <param name="section">The section.</param>
-        /// <param name="key">The key.</param>
-        /// <param name="value">The value.</param>
         /// <exception cref="ArgumentNullException">If key or value is null.</exception>
-        public void SetValue(string section, string key, string value)
+        public void WriteSetting(string section, KeyValuePair<string, string> setting)
         {
-            CheckForNull(key, nameof(key));
-            CheckForNull(value, nameof(value));
+            CheckForNull(section, nameof(section));
+            CheckForNull(setting.Key, nameof(setting.Key));
+            CheckForNull(setting.Value, nameof(setting.Value));
 
-            _ = NativeMethods.WritePrivateProfileString(section, key, value, _fileName);
+            _ = NativeMethods.WritePrivateProfileString(section, setting.Key, setting.Value, _fileName);
         }
 
         #endregion Public Methods

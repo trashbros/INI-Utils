@@ -47,7 +47,7 @@ namespace IniUtilsTest
             var iniFile = new IniFile(fileName);
 
             // Get all the key/value pairs from the global section
-            var keyValuePairs = iniFile.GetKeyValuePairs("global");
+            var keyValuePairs = iniFile.ReadSettingsFromSection("global");
 
             // Verify that all the pairs were returned
             keyValuePairs.Should()
@@ -96,11 +96,11 @@ namespace IniUtilsTest
             // Create a new IniFile with the temp file name
             var iniFile = new IniFile(fileName);
 
-            // Get the value
-            string color = iniFile.GetValue("global", "color");
+            // Get the setting
+            var setting = iniFile.ReadSetting("global", "color");
 
             // Verify that the file was created
-            color.Should().Be(expected ?? value);
+            setting.Value.Should().Be(expected ?? value);
 
             // Clean up after ourselves
             File.Delete(fileName);
@@ -117,7 +117,7 @@ namespace IniUtilsTest
             var iniFile = new IniFile(fileName);
 
             // Set a value
-            iniFile.SetValue("global", "color", "purple");
+            iniFile.WriteSetting("global", new KeyValuePair<string, string>("color", "purple"));
 
             // Verify that the file matches what is expected
             File.ReadAllLines(fileName).Should().BeEquivalentTo(new string[] { "[global]", "color=purple" });
@@ -159,11 +159,11 @@ namespace IniUtilsTest
             // Create a new IniFile with the temp file name
             var iniFile = new IniFile(fileName);
 
-            // Get the value, specifying a default
-            string color = iniFile.GetValue("global", "color", $"{value}");
+            // Get the setting, specifying a default
+            var setting = iniFile.ReadSetting("global", "color", $"{value}");
 
             // Verify that the value is correct
-            color.Should().Be(value.TrimEnd());
+            setting.Value.Should().Be(value.TrimEnd());
 
             // Clean up after ourselves
             File.Delete(fileName);
@@ -181,7 +181,7 @@ namespace IniUtilsTest
             var iniFile = new IniFile(fileName);
 
             // Get the value
-            Action action = () => { string color = iniFile.GetValue("global", null); };
+            Action action = () => { var setting = iniFile.ReadSetting("global", null); };
 
             // Verify that the exception is thrown
             action.Should().ThrowExactly<ArgumentNullException>();
@@ -204,7 +204,7 @@ namespace IniUtilsTest
             var iniFile = new IniFile(fileName);
 
             // Set a value
-            iniFile.SetValue("global", "color", "purple");
+            iniFile.WriteSetting("global", new KeyValuePair<string, string>("color", "purple"));
 
             // Verify that the file was created
             File.Exists(fileName).Should().BeTrue();
@@ -223,7 +223,7 @@ namespace IniUtilsTest
             var iniFile = new IniFile(fileName);
 
             // Set a value
-            Action action = () => { iniFile.SetValue("global", null, "purple"); };
+            Action action = () => { iniFile.WriteSetting("global", new KeyValuePair<string, string>(null, "purple")); };
 
             // Verify that exception is thrown
             action.Should().ThrowExactly<ArgumentNullException>();
@@ -242,7 +242,7 @@ namespace IniUtilsTest
             var iniFile = new IniFile(fileName);
 
             // Set a value
-            Action action = () => { iniFile.SetValue("global", "color", null); };
+            Action action = () => { iniFile.WriteSetting("global", new KeyValuePair<string, string>("color", null)); };
 
             // Verify that exception is thrown
             action.Should().ThrowExactly<ArgumentNullException>();

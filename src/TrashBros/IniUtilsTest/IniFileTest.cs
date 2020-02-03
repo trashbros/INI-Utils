@@ -244,6 +244,9 @@ namespace IniUtilsTest
             // Create a new IniFile with the temp file name
             var iniFile = new IniFile(fileName);
 
+            // Write a setting to the section
+            iniFile.WriteSetting("global", new Setting("audio", "off"));
+
             // Create a list of settings
             var settings = new List<Setting>
             {
@@ -254,8 +257,9 @@ namespace IniUtilsTest
             // Write the settings to the global section
             iniFile.WriteSettings("global", settings);
 
+
             // Verify that the file contains the settings
-            File.ReadAllLines(fileName).Should().Contain(new string[] { "[global]", $"color={value}", "name=sam" });
+            File.ReadAllLines(fileName).Should().Contain(new string[] { "[global]", $"color={value}", "name=sam", "audio=off" });
 
             // Clean up after ourselves
             File.Delete(fileName);

@@ -280,14 +280,10 @@ namespace TrashBros.IniUtils
             CheckForNull(section, nameof(section));
             CheckForNull(settings, nameof(settings));
 
-            string lpString = string.Empty;
             foreach (var setting in settings)
             {
-                lpString += $"{setting.Name}={setting.Value}\0";
+                WriteSetting(section, setting);
             }
-            lpString += "\0";
-
-            NativeMethods.WritePrivateProfileSection(section, lpString, _fileName);
         }
 
         #endregion Public Methods

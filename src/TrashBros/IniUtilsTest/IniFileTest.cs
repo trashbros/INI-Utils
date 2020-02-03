@@ -181,6 +181,60 @@ namespace IniUtilsTest
         [InlineData("\"Mixed quotes\'")]
         [InlineData("\'Mixed quotes\"")]
         [InlineData("αβγδε")]
+        public void CanDeleteASetting(string value)
+        {
+            // Create a simple ini file with one value
+            string fileName = Path.GetTempFileName();
+            string[] lines = { "[global]", $"color={value}", "name=sam" };
+            File.WriteAllLines(fileName, lines, Encoding.Unicode);
+
+            // Create a new IniFile with the temp file name
+            var iniFile = new IniFile(fileName);
+
+            // Delete one of the settings
+            iniFile.DeleteSetting("global", "color");
+
+            // Get all settings from the global section
+            var settings = iniFile.ReadSettings("global");
+
+            // Verify that all the settings were returned
+            settings.Should()
+                .BeEquivalentTo(new List<Setting>()
+                {
+                    new Setting("name", "sam")
+                });
+
+            // Clean up after ourselves
+            File.Delete(fileName);
+
+        }
+
+        [Theory]
+        [InlineData("purple")]
+        [InlineData("   purple")]
+        [InlineData("purple   ")]
+        [InlineData("a")]
+        [InlineData("")]
+        [InlineData("  ")]
+        [InlineData("This is a value with spaces!")]
+        [InlineData("This is a value with [square brackets]")]
+        [InlineData("This is a value with ; semi-colors ;")]
+        [InlineData("This is a value with = equal signs =")]
+        [InlineData("\"Double quotes\"")]
+        [InlineData("\'Single quotes\'")]
+        [InlineData("\"  Double quotes  \"")]
+        [InlineData("\'  Single quotes  \'")]
+        [InlineData("\"Unmatched double")]
+        [InlineData("\'Unmatched single")]
+        [InlineData("Unmatched double\"")]
+        [InlineData("Unmatched single\'")]
+        [InlineData("\"\"")]
+        [InlineData("\'\'")]
+        [InlineData("\"")]
+        [InlineData("\'")]
+        [InlineData("\"Mixed quotes\'")]
+        [InlineData("\'Mixed quotes\"")]
+        [InlineData("αβγδε")]
         public void CanWriteSettingsToASection(string value)
         {
             // Create a new temporary file to get a temp file name and delete it

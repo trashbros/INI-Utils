@@ -243,10 +243,10 @@ namespace TrashBros.IniUtils
         }
 
         /// <summary>
-        /// Write the setting to the specified section.
+        /// Write a setting to the specified section.
         /// </summary>
         /// <param name="section">The section.</param>
-        /// <exception cref="ArgumentNullException">If section, name, or value is null.</exception>
+        /// <exception cref="ArgumentNullException">If section, seting, setting.Name, or setting.Value is null.</exception>
         public void WriteSetting(string section, Setting setting)
         {
             CheckForNull(section, nameof(section));
@@ -254,6 +254,20 @@ namespace TrashBros.IniUtils
             CheckForNull(setting.Value, nameof(setting.Value));
 
             _ = NativeMethods.WritePrivateProfileString(section, setting.Name, setting.Value, _fileName);
+        }
+
+        /// <summary>
+        /// Delete a setting from the specified section.
+        /// </summary>
+        /// <param name="section">The section.</param>
+        /// <param name="name">The setting name.</param>
+        /// <exception cref="ArgumentNullException">If section or name is null.</exception>
+        public void DeleteSetting(string section, string name)
+        {
+            CheckForNull(section, nameof(section));
+            CheckForNull(name, nameof(name));
+
+            _ = NativeMethods.WritePrivateProfileString(section, name, null, _fileName);
         }
 
         /// <summary>

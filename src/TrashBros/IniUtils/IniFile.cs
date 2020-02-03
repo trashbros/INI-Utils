@@ -8,7 +8,7 @@ using System.Text;
 namespace TrashBros.IniUtils
 {
     /// <summary>
-    /// Represents an INI file that settings can be written to and read from.
+    /// Read and write settigns to an INI file.
     /// </summary>
     public class IniFile
     {
@@ -20,7 +20,7 @@ namespace TrashBros.IniUtils
         private const int MaxSize = 65536;
 
         /// <summary>
-        /// The file name of the INI file.
+        /// INI file name.
         /// </summary>
         private readonly string _fileName;
 
@@ -29,21 +29,18 @@ namespace TrashBros.IniUtils
         #region Private Methods
 
         /// <summary>
-        /// Checks for null and throws exception accordingly.
+        /// Thrown an exception of <paramref name="arg"/> is null.
         /// </summary>
         /// <param name="arg">The argument.</param>
         /// <param name="argName">Name of the argument.</param>
-        /// <exception cref="ArgumentNullException">If arg is null.</exception>
-        private static void CheckForNull(object arg, string argName)
+        /// <exception cref="ArgumentNullException">If <paramref name="arg"/> is null.</exception>
+        private static void ThrowExceptionIfNull(object arg, string argName)
         {
-            if (arg == null)
-            {
-                throw new ArgumentNullException(argName);
-            }
+            _ = arg ?? throw new ArgumentNullException(argName);
         }
 
         /// <summary>
-        /// Converts the INI file to Unicode encoding.
+        /// Converts the file to Unicode encoding if it isn't already.
         /// </summary>
         private void ConvertFileToUnicodeEncoding()
         {
@@ -143,8 +140,7 @@ namespace TrashBros.IniUtils
         #region Public Constructors
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="IniFile"/> class using the specified INI
-        /// file name.
+        /// Initializes a new instance of the <see cref="IniFile"/> class using the specified file name.
         /// </summary>
         /// <param name="fileName">Name of the INI file.</param>
         public IniFile(string fileName)
@@ -159,18 +155,35 @@ namespace TrashBros.IniUtils
         #region Public Methods
 
         /// <summary>
+        /// Delete a setting from the specified section.
+        /// </summary>
+        /// <param name="section">The section.</param>
+        /// <param name="name">The setting name.</param>
+        /// <exception cref="ArgumentNullException">If section or name is null.</exception>
+        public void DeleteSetting(string section, string name)
+        {
+            ThrowExceptionIfNull(section, nameof(section));
+            ThrowExceptionIfNull(name, nameof(name));
+
+            _ = NativeMethods.WritePrivateProfileString(section, name, null, _fileName);
+        }
+
+        /// <summary>
         /// Read the setting with the specified name in the specified section. If the setting does
-        /// not exist, <paramref name="defaultValue"/> will be used.
+        /// not exist, <paramref name="defaultValue"/> will be returned.
         /// </summary>
         /// <param name="section">The section.</param>
         /// <param name="name">The name.</param>
         /// <param name="defaultValue">The default value.</param>
-        /// <returns>The value.</returns>
+        /// <returns>
+        /// A setting with the value read from the file, or <paramref name="defaultValue"/> if the
+        /// setting is not found in the file.
+        /// </returns>
         /// <exception cref="ArgumentNullException">If section or name is null.</exception>
         public Setting ReadSetting(string section, string name, string defaultValue = "")
         {
-            CheckForNull(section, nameof(section));
-            CheckForNull(name, nameof(name));
+            ThrowExceptionIfNull(section, nameof(section));
+            ThrowExceptionIfNull(name, nameof(name));
 
             byte[] lpReturnedString = new byte[MaxSize];
             _ = NativeMethods.GetPrivateProfileString(section, name, defaultValue, lpReturnedString, MaxSize, _fileName);
@@ -184,7 +197,7 @@ namespace TrashBros.IniUtils
         /// Read all the settings from the specified section.
         /// </summary>
         /// <param name="section">The section.</param>
-        /// <returns>The settings.</returns>
+        /// <returns>A list of settings read from <paramref name="section"/>.</returns>
         public List<Setting> ReadSettings(string section)
         {
             // Initialize list of settings
@@ -246,28 +259,16 @@ namespace TrashBros.IniUtils
         /// Write a setting to the specified section.
         /// </summary>
         /// <param name="section">The section.</param>
-        /// <exception cref="ArgumentNullException">If section, seting, setting.Name, or setting.Value is null.</exception>
+        /// <exception cref="ArgumentNullException">
+        /// If section, seting, setting.Name, or setting.Value is null.
+        /// </exception>
         public void WriteSetting(string section, Setting setting)
         {
-            CheckForNull(section, nameof(section));
-            CheckForNull(setting.Name, nameof(setting.Name));
-            CheckForNull(setting.Value, nameof(setting.Value));
+            ThrowExceptionIfNull(section, nameof(section));
+            ThrowExceptionIfNull(setting.Name, nameof(setting.Name));
+            ThrowExceptionIfNull(setting.Value, nameof(setting.Value));
 
             _ = NativeMethods.WritePrivateProfileString(section, setting.Name, setting.Value, _fileName);
-        }
-
-        /// <summary>
-        /// Delete a setting from the specified section.
-        /// </summary>
-        /// <param name="section">The section.</param>
-        /// <param name="name">The setting name.</param>
-        /// <exception cref="ArgumentNullException">If section or name is null.</exception>
-        public void DeleteSetting(string section, string name)
-        {
-            CheckForNull(section, nameof(section));
-            CheckForNull(name, nameof(name));
-
-            _ = NativeMethods.WritePrivateProfileString(section, name, null, _fileName);
         }
 
         /// <summary>
@@ -277,8 +278,8 @@ namespace TrashBros.IniUtils
         /// <param name="settings">The settings.</param>
         public void WriteSettings(string section, List<Setting> settings)
         {
-            CheckForNull(section, nameof(section));
-            CheckForNull(settings, nameof(settings));
+            ThrowExceptionIfNull(section, nameof(section));
+            ThrowExceptionIfNull(settings, nameof(settings));
 
             foreach (var setting in settings)
             {

@@ -56,21 +56,7 @@ namespace TrashBros.IniUtils
 
         #region Private Enums
 
-        private enum DeleteSettingState
-        {
-            LookingForSection,
-            LookingForSetting,
-            DoneLooking
-        }
-
-        private enum ReadSettingState
-        {
-            LookingForSection,
-            LookingForSetting,
-            DoneLooking,
-        }
-
-        private enum WriteSettingState
+        private enum ParserState
         {
             LookingForSection,
             LookingForSetting,
@@ -179,7 +165,7 @@ namespace TrashBros.IniUtils
             Regex specificNameValueRegex = new Regex($@"^\s*({name})\s*=.*$");
 
             // First we look for the section
-            DeleteSettingState deleteSettingState = DeleteSettingState.LookingForSection;
+            ParserState parserState = ParserState.LookingForSection;
 
             // Create a memory stream to store the new file
             var ms = new MemoryStream();
@@ -191,27 +177,27 @@ namespace TrashBros.IniUtils
                 {
                     string line = reader.ReadLine();
 
-                    switch (deleteSettingState)
+                    switch (parserState)
                     {
                         // We are looking for the specific section
-                        case DeleteSettingState.LookingForSection:
+                        case ParserState.LookingForSection:
 
                             // Is this the right section?
                             if (specificSectionRegex.IsMatch(line))
                             {
                                 // Now look for the setting in this section
-                                deleteSettingState = DeleteSettingState.LookingForSetting;
+                                parserState = ParserState.LookingForSetting;
                             }
                             writer.WriteLine(line);
                             break;
 
                         // We are looking for the specific setting to delete
-                        case DeleteSettingState.LookingForSetting:
+                        case ParserState.LookingForSetting:
                             // Is this the right setting?
                             if (specificNameValueRegex.IsMatch(line))
                             {
                                 // We are now done looking, also we won't write out this line
-                                deleteSettingState = DeleteSettingState.DoneLooking;
+                                parserState = ParserState.DoneLooking;
                             }
                             else
                             {
@@ -221,7 +207,7 @@ namespace TrashBros.IniUtils
                             break;
 
                         // We done looking for the setting, just write out the rest of the lines
-                        case DeleteSettingState.DoneLooking:
+                        case ParserState.DoneLooking:
                             writer.WriteLine(line);
                             break;
                     }
@@ -260,7 +246,7 @@ namespace TrashBros.IniUtils
             Regex specificNameValueRegex = new Regex($@"^\s*({name})\s*=\s*(.*\S)\s*$");
 
             // First we look for the section
-            ReadSettingState readSettingState = ReadSettingState.LookingForSection;
+            ParserState parserState = ParserState.LookingForSection;
 
             // Read all the file lines
             string[] lines = File.ReadAllLines(_fileName, Encoding.Unicode);
@@ -268,28 +254,28 @@ namespace TrashBros.IniUtils
             // Check the lines one at a time and try and find the setting in specified section
             foreach (string line in lines)
             {
-                switch (readSettingState)
+                switch (parserState)
                 {
                     // We are looking for the specific section
-                    case ReadSettingState.LookingForSection:
+                    case ParserState.LookingForSection:
 
                         // Is this the right section?
                         if (specificSectionRegex.IsMatch(line))
                         {
                             // Now look for the setting in this section
-                            readSettingState = ReadSettingState.LookingForSetting;
+                            parserState = ParserState.LookingForSetting;
                         }
                         break;
 
                     // We are looking for the specific setting
-                    case ReadSettingState.LookingForSetting:
+                    case ParserState.LookingForSetting:
 
                         // Is this the start of a new section?
                         if (anySectionRegex.IsMatch(line))
                         {
                             // We have encountered a new section without finding the setting We can
                             // stop looking now
-                            readSettingState = ReadSettingState.DoneLooking;
+                            parserState = ParserState.DoneLooking;
                         }
                         // Is this the setting we are looking for?
                         else if (specificNameValueRegex.IsMatch(line))
@@ -312,13 +298,13 @@ namespace TrashBros.IniUtils
                             }
 
                             // We found the setting, we can stop looking now
-                            readSettingState = ReadSettingState.DoneLooking;
+                            parserState = ParserState.DoneLooking;
                         }
                         break;
                 }
 
                 // We can stop looping through the lines if we are done.
-                if (readSettingState == ReadSettingState.DoneLooking)
+                if (parserState == ParserState.DoneLooking)
                 {
                     break;
                 }
@@ -342,7 +328,7 @@ namespace TrashBros.IniUtils
             Regex specificSectionRegex = new Regex($@"^\s*\[\s*({section})\s*\].*$");
 
             // First we look for the section
-            ReadSettingState readSettingState = ReadSettingState.LookingForSection;
+            ParserState parserState = ParserState.LookingForSection;
 
             // Read all the file lines
             string[] lines = File.ReadAllLines(_fileName, Encoding.Unicode);
@@ -350,28 +336,28 @@ namespace TrashBros.IniUtils
             // Check the lines one at a time and try and find the setting in specified section
             foreach (string line in lines)
             {
-                switch (readSettingState)
+                switch (parserState)
                 {
                     // We are looking for the specific section
-                    case ReadSettingState.LookingForSection:
+                    case ParserState.LookingForSection:
 
                         // Is this the right section?
                         if (specificSectionRegex.IsMatch(line))
                         {
                             // Now look for the settings in this section
-                            readSettingState = ReadSettingState.LookingForSetting;
+                            parserState = ParserState.LookingForSetting;
                         }
                         break;
 
                     // We are looking for settings in this seciton now
-                    case ReadSettingState.LookingForSetting:
+                    case ParserState.LookingForSetting:
 
                         // Is this the start of a new section?
                         if (anySectionRegex.IsMatch(line))
                         {
                             // We have encountered a new section without finding the setting We can
                             // stop looking now
-                            readSettingState = ReadSettingState.DoneLooking;
+                            parserState = ParserState.DoneLooking;
                         }
                         // Is this a setting?
                         else if (anyNameValueRegex.IsMatch(line))
@@ -401,7 +387,7 @@ namespace TrashBros.IniUtils
                 }
 
                 // We can stop looping through the lines if we are done.
-                if (readSettingState == ReadSettingState.DoneLooking)
+                if (parserState == ParserState.DoneLooking)
                 {
                     break;
                 }
@@ -432,7 +418,7 @@ namespace TrashBros.IniUtils
             Regex specificNameValueRegex = new Regex($@"^\s*({setting.Name})\s*=.*$");
 
             // First we look for the section
-            WriteSettingState writeSettingState = WriteSettingState.LookingForSection;
+            ParserState parserState = ParserState.LookingForSection;
 
             // Create a memory stream to store the new file
             var ms = new MemoryStream();
@@ -444,22 +430,22 @@ namespace TrashBros.IniUtils
                 {
                     string line = reader.ReadLine();
 
-                    switch (writeSettingState)
+                    switch (parserState)
                     {
                         // We are looking for the specific section
-                        case WriteSettingState.LookingForSection:
+                        case ParserState.LookingForSection:
 
                             // Is this the right section?
                             if (specificSectionRegex.IsMatch(line))
                             {
                                 // Now look for the setting in this section
-                                writeSettingState = WriteSettingState.LookingForSetting;
+                                parserState = ParserState.LookingForSetting;
                             }
                             writer.WriteLine(line);
                             break;
 
                         // We are looking for the specific setting to update it
-                        case WriteSettingState.LookingForSetting:
+                        case ParserState.LookingForSetting:
                             // Is this the start of a new section?
                             if (anySectionRegex.IsMatch(line))
                             {
@@ -471,7 +457,7 @@ namespace TrashBros.IniUtils
                                 writer.WriteLine("");
 
                                 writer.WriteLine(line);
-                                writeSettingState = WriteSettingState.DoneLooking;
+                                parserState = ParserState.DoneLooking;
                             }
                             // Is this the right setting?
                             else if (specificNameValueRegex.IsMatch(line))
@@ -480,7 +466,7 @@ namespace TrashBros.IniUtils
                                 writer.WriteLine($"{setting.Name}={setting.Value}");
 
                                 // We are now done looking
-                                writeSettingState = WriteSettingState.DoneLooking;
+                                parserState = ParserState.DoneLooking;
                             }
                             else
                             {
@@ -490,14 +476,14 @@ namespace TrashBros.IniUtils
                             break;
 
                         // We done looking for the setting, just write out the rest of the lines
-                        case WriteSettingState.DoneLooking:
+                        case ParserState.DoneLooking:
                             writer.WriteLine(line);
                             break;
                     }
                 }
 
                 // If we didn't find the section
-                if (writeSettingState == WriteSettingState.LookingForSection)
+                if (parserState == ParserState.LookingForSection)
                 {
                     // Write the seciton
                     writer.WriteLine("");
@@ -528,7 +514,7 @@ namespace TrashBros.IniUtils
             Regex specificSectionRegex = new Regex($@"^\s*\[\s*({section})\s*\].*$");
 
             // First we look for the section
-            WriteSettingState writeSettingState = WriteSettingState.LookingForSection;
+            ParserState parserState = ParserState.LookingForSection;
 
             // Create a copy of the settings
             var remainingSettings = new List<Setting>(settings.ToArray());
@@ -543,22 +529,22 @@ namespace TrashBros.IniUtils
                 {
                     string line = reader.ReadLine();
 
-                    switch (writeSettingState)
+                    switch (parserState)
                     {
                         // We are looking for the specific section
-                        case WriteSettingState.LookingForSection:
+                        case ParserState.LookingForSection:
 
                             // Is this the right section?
                             if (specificSectionRegex.IsMatch(line))
                             {
                                 // Now look for the setting in this section
-                                writeSettingState = WriteSettingState.LookingForSetting;
+                                parserState = ParserState.LookingForSetting;
                             }
                             writer.WriteLine(line);
                             break;
 
                         // We are looking for the specific setting to update it
-                        case WriteSettingState.LookingForSetting:
+                        case ParserState.LookingForSetting:
                             // Is this the start of a new section?
                             if (anySectionRegex.IsMatch(line))
                             {
@@ -573,7 +559,7 @@ namespace TrashBros.IniUtils
                                 writer.WriteLine("");
 
                                 writer.WriteLine(line);
-                                writeSettingState = WriteSettingState.DoneLooking;
+                                parserState = ParserState.DoneLooking;
                             }
                             // Is this a setting?
                             else if (anyNameValueRegex.IsMatch(line))
@@ -606,14 +592,14 @@ namespace TrashBros.IniUtils
                             break;
 
                         // We done looking for the setting, just write out the rest of the lines
-                        case WriteSettingState.DoneLooking:
+                        case ParserState.DoneLooking:
                             writer.WriteLine(line);
                             break;
                     }
                 }
 
                 // If we didn't find the section
-                if (writeSettingState == WriteSettingState.LookingForSection)
+                if (parserState == ParserState.LookingForSection)
                 {
                     // Write the seciton
                     writer.WriteLine("");
@@ -627,7 +613,7 @@ namespace TrashBros.IniUtils
                     writer.WriteLine("");
                 }
                 // Else if we found the section
-                else if (writeSettingState == WriteSettingState.LookingForSetting)
+                else if (parserState == ParserState.LookingForSetting)
                 {
                     // Write the remaining settings followed by a new line
                     foreach (var setting in remainingSettings)

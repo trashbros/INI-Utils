@@ -24,7 +24,7 @@ along with TransBros.IniUtils.  If not, see <https://www.gnu.org/licenses/>.
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Runtime.InteropServices;
+using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 
@@ -144,28 +144,6 @@ namespace TrashBros.IniUtils
         }
 
         #endregion Private Methods
-
-        #region Internal Classes
-
-        /// <summary>
-        /// Class containing all P/Invokes
-        /// </summary>
-        internal static class NativeMethods
-        {
-            #region Internal Methods
-
-            [DllImport("kernel32.dll", CharSet = CharSet.Unicode)]
-            internal static extern bool WritePrivateProfileString(
-                string lpAppName,
-                string lpKeyName,
-                string lpString,
-                string lpFileName
-            );
-
-            #endregion Internal Methods
-        }
-
-        #endregion Internal Classes
 
         #region Public Constructors
 
@@ -570,12 +548,138 @@ namespace TrashBros.IniUtils
         /// <param name="settings">The settings.</param>
         public void WriteSettings(string section, List<Setting> settings)
         {
+            // Make sure section and setttings isn't null
             ThrowExceptionIfNull(section, nameof(section));
             ThrowExceptionIfNull(settings, nameof(settings));
 
-            foreach (var setting in settings)
+            // A regex that will match the specified section
+            Regex specificSectionRegex = new Regex($@"^\s*\[\s*({section})\s*\].*$");
+
+            // First we look for the section
+            WriteSettingState writeSettingState = WriteSettingState.LookingForSection;
+
+            // Create a copy of the settings
+            var remainingSettings = new List<Setting>(settings.ToArray());
+
+            string tempFile = null;
+            try
             {
-                _ = NativeMethods.WritePrivateProfileString(section, setting.Name, setting.Value, _fileName);
+                // Create a temporary file to hold new file with the new setting
+                tempFile = Path.GetTempFileName();
+
+                using (var reader = new StreamReader(_fileName, Encoding.Unicode))
+                using (var writer = new StreamWriter(tempFile, false, Encoding.Unicode))
+                {
+                    while (!reader.EndOfStream)
+                    {
+                        string line = reader.ReadLine();
+
+                        switch (writeSettingState)
+                        {
+                            // We are looking for the specific section
+                            case WriteSettingState.LookingForSection:
+
+                                // Is this the right section?
+                                if (specificSectionRegex.IsMatch(line))
+                                {
+                                    // Now look for the setting in this section
+                                    writeSettingState = WriteSettingState.LookingForSetting;
+                                }
+                                writer.WriteLine(line);
+                                break;
+
+                            // We are looking for the specific setting to update it
+                            case WriteSettingState.LookingForSetting:
+                                // Is this the start of a new section?
+                                if (anySectionRegex.IsMatch(line))
+                                {
+                                    // We have encountered a new section without finding the setting
+                                    // We can stop looking now
+
+                                    // Write the remaining settings followed by a new line
+                                    foreach (var setting in remainingSettings)
+                                    {
+                                        writer.WriteLine($"{setting.Name}={setting.Value}");
+                                    }
+                                    writer.WriteLine("");
+
+                                    writer.WriteLine(line);
+                                    writeSettingState = WriteSettingState.DoneLooking;
+                                }
+                                // Is this a setting?
+                                else if (anyNameValueRegex.IsMatch(line))
+                                {
+                                    // Grab the name and value using the regex
+                                    var matches = anyNameValueRegex.Matches(line);
+                                    string name = matches[0].Groups[1].Value.TrimEnd();
+
+                                    // Do any of the remaining settings match?
+                                    if (remainingSettings.Any(s => s.Name == name))
+                                    {
+                                        // Update the setting
+                                        Setting setting = remainingSettings.Last(s => s.Name == name);
+                                        writer.WriteLine($"{setting.Name}={setting.Value}");
+
+                                        // Remove it from the list
+                                        remainingSettings.RemoveAll(s => s.Name == name);
+                                    }
+                                    // No match, so just keep the setting and keep going
+                                    else
+                                    {
+                                        writer.WriteLine(line);
+                                    }
+                                }
+                                else
+                                {
+                                    // Not a setting, keep on going
+                                    writer.WriteLine(line);
+                                }
+                                break;
+
+                            // We done looking for the setting, just write out the rest of the lines
+                            case WriteSettingState.DoneLooking:
+                                writer.WriteLine(line);
+                                break;
+                        }
+                    }
+
+                    // If we didn't find the section
+                    if (writeSettingState == WriteSettingState.LookingForSection)
+                    {
+                        // Write the seciton
+                        writer.WriteLine("");
+                        writer.WriteLine($"[{section.Trim()}]");
+
+                        // Write the remaining settings followed by a new line
+                        foreach (var setting in remainingSettings)
+                        {
+                            writer.WriteLine($"{setting.Name}={setting.Value}");
+                        }
+                        writer.WriteLine("");
+                    }
+                    // Else if we found the section
+                    else if (writeSettingState == WriteSettingState.LookingForSetting)
+                    {
+                        // Write the remaining settings followed by a new line
+                        foreach (var setting in remainingSettings)
+                        {
+                            writer.WriteLine($"{setting.Name}={setting.Value}");
+                        }
+                        writer.WriteLine("");
+                    }
+                }
+
+                // Replace the file with the temporary one
+                File.Delete(_fileName);
+                File.Move(tempFile, _fileName);
+            }
+            finally
+            {
+                // Clean up any temporary files in case something went wrong
+                if (tempFile != null)
+                {
+                    File.Delete(tempFile);
+                }
             }
         }
 

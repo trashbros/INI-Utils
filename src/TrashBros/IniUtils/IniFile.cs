@@ -56,6 +56,13 @@ namespace TrashBros.IniUtils
 
         #region Private Enums
 
+        private enum DeleteSettingState
+        {
+            LookingForSection,
+            LookingForSetting,
+            DoneLooking
+        }
+
         private enum ReadSettingState
         {
             LookingForSection,
@@ -178,10 +185,81 @@ namespace TrashBros.IniUtils
         /// <exception cref="ArgumentNullException">If section or name is null.</exception>
         public void DeleteSetting(string section, string name)
         {
+            // Make sure the section and name aren't null
             ThrowExceptionIfNull(section, nameof(section));
             ThrowExceptionIfNull(name, nameof(name));
 
-            _ = NativeMethods.WritePrivateProfileString(section, name, null, _fileName);
+            // A regex that will match the specified section
+            Regex specificSectionRegex = new Regex($@"^\s*\[\s*({section})\s*\].*$");
+
+            // A regex that will match a setting with a specific name
+            Regex specificNameValueRegex = new Regex($@"^\s*({name})\s*=.*$");
+
+            // First we look for the section
+            DeleteSettingState deleteSettingState = DeleteSettingState.LookingForSection;
+
+            string tempFile = null;
+            try
+            {
+                // Create a temporary file to hold new file without deleted setting
+                tempFile = Path.GetTempFileName();
+
+                using (var reader = new StreamReader(_fileName, Encoding.Unicode))
+                using (var writer = new StreamWriter(tempFile, false, Encoding.Unicode))
+                {
+                    while (!reader.EndOfStream)
+                    {
+                        string line = reader.ReadLine();
+
+                        switch (deleteSettingState)
+                        {
+                            // We are looking for the specific section
+                            case DeleteSettingState.LookingForSection:
+
+                                // Is this the right section?
+                                if (specificSectionRegex.IsMatch(line))
+                                {
+                                    // Now look for the setting in this section
+                                    deleteSettingState = DeleteSettingState.LookingForSetting;
+                                }
+                                writer.WriteLine(line);
+                                break;
+
+                            // We are looking for the specific setting to delete
+                            case DeleteSettingState.LookingForSetting:
+                                // Is this the right setting?
+                                if (specificNameValueRegex.IsMatch(line))
+                                {
+                                    // We are now done looking, also we won't write out this line
+                                    deleteSettingState = DeleteSettingState.DoneLooking;
+                                }
+                                else
+                                {
+                                    // Not the right setting, keep on going
+                                    writer.WriteLine(line);
+                                }
+                                break;
+
+                            // We done looking for the setting, just write out the rest of the lines
+                            case DeleteSettingState.DoneLooking:
+                                writer.WriteLine(line);
+                                break;
+                        }
+                    }
+                }
+
+                // Replace the file with the temporary one
+                File.Delete(_fileName);
+                File.Move(tempFile, _fileName);
+            }
+            finally
+            {
+                // Clean up any temporary files in case something went wrong
+                if (tempFile != null)
+                {
+                    File.Delete(tempFile);
+                }
+            }
         }
 
         /// <summary>

@@ -40,7 +40,7 @@ namespace TrashBros.IniUtils
         /// <summary>
         /// A regex that should match a any setting
         /// </summary>
-        private static readonly Regex anyNameValueRegex = new Regex($@"^\s*(.*?\S)\s*=\s*(.*)$");
+        private static readonly Regex anyNameValueRegex = new Regex(@"^\s*(.*?\S)\s*=\s*(.*)$");
 
         /// <summary>
         /// A regex that should match any section
@@ -453,7 +453,7 @@ namespace TrashBros.IniUtils
                                 // can stop looking now
 
                                 // Write the setting followed by a new line
-                                writer.WriteLine($"{setting.Name}={setting.Value}");
+                                writer.WriteLine(setting);
                                 writer.WriteLine("");
 
                                 writer.WriteLine(line);
@@ -463,7 +463,7 @@ namespace TrashBros.IniUtils
                             else if (specificNameValueRegex.IsMatch(line))
                             {
                                 // Write the new setting
-                                writer.WriteLine($"{setting.Name}={setting.Value}");
+                                writer.WriteLine(setting);
 
                                 // We are now done looking
                                 parserState = ParserState.DoneLooking;
@@ -490,7 +490,7 @@ namespace TrashBros.IniUtils
                     writer.WriteLine($"[{section.Trim()}]");
 
                     // Write the setting followed by a new line
-                    writer.WriteLine($"{setting.Name.Trim()}={setting.Value}");
+                    writer.WriteLine(setting);
                     writer.WriteLine("");
                 }
             }
@@ -554,7 +554,7 @@ namespace TrashBros.IniUtils
                                 // Write the remaining settings followed by a new line
                                 foreach (var setting in remainingSettings)
                                 {
-                                    writer.WriteLine($"{setting.Name}={setting.Value}");
+                                    writer.WriteLine(setting);
                                 }
                                 writer.WriteLine("");
 
@@ -573,7 +573,7 @@ namespace TrashBros.IniUtils
                                 {
                                     // Update the setting
                                     Setting setting = remainingSettings.Last(s => s.Name == name);
-                                    writer.WriteLine($"{setting.Name}={setting.Value}");
+                                    writer.WriteLine(setting);
 
                                     // Remove it from the list
                                     remainingSettings.RemoveAll(s => s.Name == name);
@@ -608,7 +608,7 @@ namespace TrashBros.IniUtils
                     // Write the remaining settings followed by a new line
                     foreach (var setting in remainingSettings)
                     {
-                        writer.WriteLine($"{setting.Name}={setting.Value}");
+                        writer.WriteLine(setting);
                     }
                     writer.WriteLine("");
                 }
@@ -618,7 +618,7 @@ namespace TrashBros.IniUtils
                     // Write the remaining settings followed by a new line
                     foreach (var setting in remainingSettings)
                     {
-                        writer.WriteLine($"{setting.Name}={setting.Value}");
+                        writer.WriteLine(setting);
                     }
                     writer.WriteLine("");
                 }

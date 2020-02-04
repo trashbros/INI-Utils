@@ -72,12 +72,19 @@ namespace TrashBros.IniUtils
             SeetingNotFound
         }
 
+        private enum WriteSettingState
+        {
+            LookingForSection,
+            LookingForSetting,
+            DoneLooking
+        }
+
         #endregion Private Enums
 
         #region Private Methods
 
         /// <summary>
-        /// Thrown an exception of <paramref name="arg"/> is null.
+        /// Thrown an exception if <paramref name="arg"/> is null.
         /// </summary>
         /// <param name="arg">The argument.</param>
         /// <param name="argName">Name of the argument.</param>
@@ -450,11 +457,110 @@ namespace TrashBros.IniUtils
         /// </exception>
         public void WriteSetting(string section, Setting setting)
         {
+            // Make sure section and settting isn't null
             ThrowExceptionIfNull(section, nameof(section));
             ThrowExceptionIfNull(setting.Name, nameof(setting.Name));
             ThrowExceptionIfNull(setting.Value, nameof(setting.Value));
 
-            _ = NativeMethods.WritePrivateProfileString(section, setting.Name, setting.Value, _fileName);
+            // A regex that will match the specified section
+            Regex specificSectionRegex = new Regex($@"^\s*\[\s*({section})\s*\].*$");
+
+            // A regex that will match a setting with a specific name
+            Regex specificNameValueRegex = new Regex($@"^\s*({setting.Name})\s*=.*$");
+
+            // First we look for the section
+            WriteSettingState writeSettingState = WriteSettingState.LookingForSection;
+
+            string tempFile = null;
+            try
+            {
+                // Create a temporary file to hold new file with the new setting
+                tempFile = Path.GetTempFileName();
+
+                using (var reader = new StreamReader(_fileName, Encoding.Unicode))
+                using (var writer = new StreamWriter(tempFile, false, Encoding.Unicode))
+                {
+                    while (!reader.EndOfStream)
+                    {
+                        string line = reader.ReadLine();
+
+                        switch (writeSettingState)
+                        {
+                            // We are looking for the specific section
+                            case WriteSettingState.LookingForSection:
+
+                                // Is this the right section?
+                                if (specificSectionRegex.IsMatch(line))
+                                {
+                                    // Now look for the setting in this section
+                                    writeSettingState = WriteSettingState.LookingForSetting;
+                                }
+                                writer.WriteLine(line);
+                                break;
+
+                            // We are looking for the specific setting to update it
+                            case WriteSettingState.LookingForSetting:
+                                // Is this the start of a new section?
+                                if (anySectionRegex.IsMatch(line))
+                                {
+                                    // We have encountered a new section without finding the setting
+                                    // We can stop looking now
+
+                                    // Write the setting followed by a new line
+                                    writer.WriteLine($"{setting.Name}={setting.Value}");
+                                    writer.WriteLine("");
+
+                                    writer.WriteLine(line);
+                                    writeSettingState = WriteSettingState.DoneLooking;
+                                }
+                                // Is this the right setting?
+                                else if (specificNameValueRegex.IsMatch(line))
+                                {
+                                    // Write the new setting
+                                    writer.WriteLine($"{setting.Name}={setting.Value}");
+
+                                    // We are now done looking
+                                    writeSettingState = WriteSettingState.DoneLooking;
+                                }
+                                else
+                                {
+                                    // Not the right setting, keep on going
+                                    writer.WriteLine(line);
+                                }
+                                break;
+
+                            // We done looking for the setting, just write out the rest of the lines
+                            case WriteSettingState.DoneLooking:
+                                writer.WriteLine(line);
+                                break;
+                        }
+                    }
+
+                    // If we didn't find the section
+                    if (writeSettingState == WriteSettingState.LookingForSection)
+                    {
+                        // Write the seciton
+                        writer.WriteLine("");
+                        writer.WriteLine($"[{section.Trim()}]");
+
+                        // Write the setting followed by a new line
+                        writer.WriteLine($"{setting.Name.Trim()}={setting.Value}");
+                        writer.WriteLine("");
+                    }
+                }
+
+                // Replace the file with the temporary one
+                File.Delete(_fileName);
+                File.Move(tempFile, _fileName);
+            }
+            finally
+            {
+                // Clean up any temporary files in case something went wrong
+                if (tempFile != null)
+                {
+                    File.Delete(tempFile);
+                }
+            }
         }
 
         /// <summary>
@@ -469,7 +575,7 @@ namespace TrashBros.IniUtils
 
             foreach (var setting in settings)
             {
-                WriteSetting(section, setting);
+                _ = NativeMethods.WritePrivateProfileString(section, setting.Name, setting.Value, _fileName);
             }
         }
 

@@ -27,6 +27,7 @@ using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
+using System.Text.RegularExpressions;
 
 namespace TrashBros.IniUtils
 {
@@ -48,6 +49,18 @@ namespace TrashBros.IniUtils
         private readonly string _fileName;
 
         #endregion Private Fields
+
+        #region Private Enums
+
+        private enum ReadSettingState
+        {
+            LookingForSection,
+            LookingForSetting,
+            SettingFound,
+            SeetingNotFound
+        }
+
+        #endregion Private Enums
 
         #region Private Methods
 
@@ -205,13 +218,86 @@ namespace TrashBros.IniUtils
         /// <exception cref="ArgumentNullException">If section or name is null.</exception>
         public Setting ReadSetting(string section, string name, string defaultValue = "")
         {
+            // Make sure the seciton and name aren't null
             ThrowExceptionIfNull(section, nameof(section));
             ThrowExceptionIfNull(name, nameof(name));
 
-            byte[] lpReturnedString = new byte[MaxSize];
-            _ = NativeMethods.GetPrivateProfileString(section, name, defaultValue, lpReturnedString, MaxSize, _fileName);
+            // Initialize the value to the default in case we don't find it
+            string value = defaultValue?.TrimEnd() ?? "";
 
-            string value = Encoding.Unicode.GetString(lpReturnedString).TrimEnd('\0');
+            // A regex that will match the specified section
+            Regex specificSectionRegex = new Regex($@"^\s*\[\s*({section})\s*\].*$");
+
+            // A regex that will match any section
+            Regex anySectionRegex = new Regex(@"^\s*\[\s*(.*)\s*\].*$");
+
+            // A regex that will match a setting with a specific name
+            Regex specificNameValueRegex = new Regex($@"^\s*({name})\s*=\s*(.*\S)\s*$");
+
+            // First we look for the section
+            ReadSettingState readSettingState = ReadSettingState.LookingForSection;
+
+            // Read all the file lines
+            string[] lines = File.ReadAllLines(_fileName, Encoding.Unicode);
+
+            // Check the lines one at a time and try and find the setting in specified section
+            foreach (string line in lines)
+            {
+                switch (readSettingState)
+                {
+                    // We are looking for the specific section
+                    case ReadSettingState.LookingForSection:
+
+                        // Is this the right section?
+                        if (specificSectionRegex.IsMatch(line))
+                        {
+                            // Now look for the setting in this section
+                            readSettingState = ReadSettingState.LookingForSetting;
+                        }
+                        break;
+
+                    // We are looking for the specific setting
+                    case ReadSettingState.LookingForSetting:
+
+                        // Is this the start of a new section?
+                        if (anySectionRegex.IsMatch(line))
+                        {
+                            // We have encountered a new section without finding the setting We can
+                            // stop looking now
+                            readSettingState = ReadSettingState.SeetingNotFound;
+                        }
+                        // Is this the setting we are looking for?
+                        else if (specificNameValueRegex.IsMatch(line))
+                        {
+                            // Grab the value using the regex
+                            var matches = specificNameValueRegex.Matches(line);
+                            value = matches[0].Groups[2].Value.TrimEnd();
+
+                            // Check for outer single quotes
+                            if (value.Length > 1 && value[0] == '\'' && value[value.Length - 1] == '\'')
+                            {
+                                // Remove outer single quotes
+                                value = value.Substring(1, value.Length - 2);
+                            }
+                            // Check for outer double quotes
+                            else if (value.Length > 1 && value[0] == '\"' && value[value.Length - 1] == '\"')
+                            {
+                                // Remove outer double quotes
+                                value = value.Substring(1, value.Length - 2);
+                            }
+
+                            // We found the setting, we can stop looking now
+                            readSettingState = ReadSettingState.SettingFound;
+                        }
+                        break;
+                }
+
+                // We can stop looking if we know we found it or if it isn't there
+                if (readSettingState == ReadSettingState.SeetingNotFound || readSettingState == ReadSettingState.SettingFound)
+                {
+                    break;
+                }
+            }
 
             return new Setting(name, value);
         }

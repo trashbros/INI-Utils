@@ -225,7 +225,7 @@ namespace IniUtilsTest
             iniFile.WriteSetting("global", new Setting("color", value));
 
             // Verify that the file contains the setting we just wrote
-            File.ReadAllLines(fileName).Should().Contain(new string[] { "[global]", $"color={value}" });
+            File.ReadAllLines(fileName).Should().Contain(new[] { "[global]", $"color={value}" });
 
             // Clean up after ourselves
             File.Delete(fileName);
@@ -280,7 +280,7 @@ namespace IniUtilsTest
             iniFile.WriteSettings("global", settings);
 
             // Verify that the file contains the settings
-            File.ReadAllLines(fileName).Should().Contain(new string[] { "[global]", $"color={value}", "name=sam", "audio=off" });
+            File.ReadAllLines(fileName).Should().Contain(new[] { "[global]", $"color={value}", "name=sam", "audio=off" });
 
             // Clean up after ourselves
             File.Delete(fileName);
@@ -342,7 +342,7 @@ namespace IniUtilsTest
             var iniFile = new IniFile(fileName);
 
             // Create an action that reads a setting with a null name
-            Action action = () => { var setting = iniFile.ReadSetting("global", null); };
+            Action action = () => { iniFile.ReadSetting("global", null); };
 
             // Verify that the exception is thrown
             action.Should().ThrowExactly<ArgumentNullException>();

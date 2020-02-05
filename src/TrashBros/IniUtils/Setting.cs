@@ -29,7 +29,7 @@ namespace TrashBros.IniUtils
     /// <summary>
     /// A name/value pair
     /// </summary>
-    /// <seealso cref="System.IEquatable{TrashBros.IniUtils.Setting}"/>
+    /// <seealso cref="System.IEquatable{Setting}"/>
     public struct Setting : IEquatable<Setting>
     {
         #region Private Fields
@@ -37,7 +37,7 @@ namespace TrashBros.IniUtils
         /// <summary>
         /// The key value pair used to hold the setting.
         /// </summary>
-        private readonly KeyValuePair<string, string> keyValuePair;
+        private readonly KeyValuePair<string, string> _keyValuePair;
 
         #endregion Private Fields
 
@@ -50,7 +50,7 @@ namespace TrashBros.IniUtils
         /// <param name="value">The value.</param>
         public Setting(string name, string value)
         {
-            keyValuePair = new KeyValuePair<string, string>(name, value);
+            _keyValuePair = new KeyValuePair<string, string>(name, value);
         }
 
         #endregion Public Constructors
@@ -61,13 +61,13 @@ namespace TrashBros.IniUtils
         /// Gets the name.
         /// </summary>
         /// <value>The name.</value>
-        public string Name { get => keyValuePair.Key; }
+        public string Name { get => _keyValuePair.Key; }
 
         /// <summary>
         /// Gets the value.
         /// </summary>
         /// <value>The value.</value>
-        public string Value { get => keyValuePair.Value; }
+        public string Value { get => _keyValuePair.Value; }
 
         #endregion Public Properties
 
@@ -105,16 +105,12 @@ namespace TrashBros.IniUtils
         /// </returns>
         public override bool Equals(object obj)
         {
-            Setting setting = (Setting)obj;
-
-            if (setting == null)
-            {
-                return false;
-            }
-            else
+            if (obj is Setting setting)
             {
                 return Equals(setting);
             }
+
+            return false;
         }
 
         /// <summary>
@@ -127,7 +123,7 @@ namespace TrashBros.IniUtils
         /// </returns>
         public bool Equals(Setting other)
         {
-            return keyValuePair.Equals(other.keyValuePair);
+            return _keyValuePair.Equals(other._keyValuePair);
         }
 
         /// <summary>
@@ -139,7 +135,7 @@ namespace TrashBros.IniUtils
         /// </returns>
         public override int GetHashCode()
         {
-            return keyValuePair.GetHashCode();
+            return _keyValuePair.GetHashCode();
         }
 
         /// <summary>

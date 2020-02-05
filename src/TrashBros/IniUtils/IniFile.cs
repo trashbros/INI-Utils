@@ -40,12 +40,12 @@ namespace TrashBros.IniUtils
         /// <summary>
         /// A regex that should match a any setting
         /// </summary>
-        private static readonly Regex anyNameValueRegex = new Regex(@"^\s*(.*?\S)\s*=\s*(.*)$");
+        private static readonly Regex AnyNameValueRegex = new Regex(@"^\s*(.*?\S)\s*=\s*(.*)$");
 
         /// <summary>
         /// A regex that should match any section
         /// </summary>
-        private static readonly Regex anySectionRegex = new Regex(@"^\s*\[\s*(.*)\s*\].*$");
+        private static readonly Regex AnySectionRegex = new Regex(@"^\s*\[\s*(.*)\s*\].*$");
 
         /// <summary>
         /// INI file name.
@@ -92,7 +92,7 @@ namespace TrashBros.IniUtils
                     {
                         reader.Peek();
                         var encoding = reader.CurrentEncoding;
-                        if (encoding != Encoding.Unicode)
+                        if (encoding.Equals(Encoding.Unicode))
                         {
                             tempFile = Path.GetTempFileName();
 
@@ -176,6 +176,8 @@ namespace TrashBros.IniUtils
                 while (!reader.EndOfStream)
                 {
                     string line = reader.ReadLine();
+
+                    if (line == null) continue;
 
                     switch (parserState)
                     {
@@ -271,7 +273,7 @@ namespace TrashBros.IniUtils
                     case ParserState.LookingForSetting:
 
                         // Is this the start of a new section?
-                        if (anySectionRegex.IsMatch(line))
+                        if (AnySectionRegex.IsMatch(line))
                         {
                             // We have encountered a new section without finding the setting We can
                             // stop looking now
@@ -353,17 +355,17 @@ namespace TrashBros.IniUtils
                     case ParserState.LookingForSetting:
 
                         // Is this the start of a new section?
-                        if (anySectionRegex.IsMatch(line))
+                        if (AnySectionRegex.IsMatch(line))
                         {
                             // We have encountered a new section without finding the setting We can
                             // stop looking now
                             parserState = ParserState.DoneLooking;
                         }
                         // Is this a setting?
-                        else if (anyNameValueRegex.IsMatch(line))
+                        else if (AnyNameValueRegex.IsMatch(line))
                         {
                             // Grab the name and value using the regex
-                            var matches = anyNameValueRegex.Matches(line);
+                            var matches = AnyNameValueRegex.Matches(line);
                             string name = matches[0].Groups[1].Value.TrimEnd();
                             string value = matches[0].Groups[2].Value.TrimEnd();
 
@@ -401,8 +403,9 @@ namespace TrashBros.IniUtils
         /// Write a setting to the specified section.
         /// </summary>
         /// <param name="section">The section.</param>
+        /// <param name="setting">The setting.</param>
         /// <exception cref="ArgumentNullException">
-        /// If section, seting, setting.Name, or setting.Value is null.
+        /// If section, setting, setting.Name, or setting.Value is null.
         /// </exception>
         public void WriteSetting(string section, Setting setting)
         {
@@ -430,6 +433,8 @@ namespace TrashBros.IniUtils
                 {
                     string line = reader.ReadLine();
 
+                    if (line == null) continue;
+
                     switch (parserState)
                     {
                         // We are looking for the specific section
@@ -447,7 +452,7 @@ namespace TrashBros.IniUtils
                         // We are looking for the specific setting to update it
                         case ParserState.LookingForSetting:
                             // Is this the start of a new section?
-                            if (anySectionRegex.IsMatch(line))
+                            if (AnySectionRegex.IsMatch(line))
                             {
                                 // We have encountered a new section without finding the setting We
                                 // can stop looking now
@@ -529,6 +534,8 @@ namespace TrashBros.IniUtils
                 {
                     string line = reader.ReadLine();
 
+                    if (line == null) continue;
+
                     switch (parserState)
                     {
                         // We are looking for the specific section
@@ -546,7 +553,7 @@ namespace TrashBros.IniUtils
                         // We are looking for the specific setting to update it
                         case ParserState.LookingForSetting:
                             // Is this the start of a new section?
-                            if (anySectionRegex.IsMatch(line))
+                            if (AnySectionRegex.IsMatch(line))
                             {
                                 // We have encountered a new section without finding the setting We
                                 // can stop looking now
@@ -562,10 +569,10 @@ namespace TrashBros.IniUtils
                                 parserState = ParserState.DoneLooking;
                             }
                             // Is this a setting?
-                            else if (anyNameValueRegex.IsMatch(line))
+                            else if (AnyNameValueRegex.IsMatch(line))
                             {
                                 // Grab the name and value using the regex
-                                var matches = anyNameValueRegex.Matches(line);
+                                var matches = AnyNameValueRegex.Matches(line);
                                 string name = matches[0].Groups[1].Value.TrimEnd();
 
                                 // Do any of the remaining settings match?

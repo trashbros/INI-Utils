@@ -21,11 +21,11 @@ You should have received a copy of the GNU Lesser General Public License
 along with TransBros.IniUtils.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-using FluentAssertions;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
+using FluentAssertions;
 using TrashBros.IniUtils;
 using Xunit;
 
@@ -33,8 +33,6 @@ namespace IniUtilsTest
 {
     public class IniFileTest
     {
-        #region Public Methods
-
         [Theory]
         [InlineData("purple")]
         [InlineData("   purple")]
@@ -64,8 +62,8 @@ namespace IniUtilsTest
         public void CanDeleteASetting(string value)
         {
             // Create a simple ini file with one value
-            string fileName = Path.GetTempFileName();
-            string[] lines = { "[global]", $"color={value}", "name=sam" };
+            var fileName = Path.GetTempFileName();
+            string[] lines = {"[global]", $"color={value}", "name=sam"};
             File.WriteAllLines(fileName, lines, Encoding.Unicode);
 
             // Create a new IniFile with the temp file name
@@ -79,7 +77,7 @@ namespace IniUtilsTest
 
             // Verify that all the settings were returned
             settings.Should()
-                .BeEquivalentTo(new List<Setting>()
+                .BeEquivalentTo(new List<Setting>
                 {
                     new Setting("name", "sam")
                 });
@@ -117,8 +115,8 @@ namespace IniUtilsTest
         public void CanReadASetting(string value, string expected)
         {
             // Create a simple ini file with one value
-            string fileName = Path.GetTempFileName();
-            string[] lines = { "[global]", $"color={value}" };
+            var fileName = Path.GetTempFileName();
+            string[] lines = {"[global]", $"color={value}"};
             File.WriteAllLines(fileName, lines, Encoding.Unicode);
 
             // Create a new IniFile with the temp file name
@@ -164,8 +162,8 @@ namespace IniUtilsTest
         public void CanReadSettingsFromSection(string value, string expected)
         {
             // Create a simple ini file with one value
-            string fileName = Path.GetTempFileName();
-            string[] lines = { "[global]", $"color={value}", "name=sam" };
+            var fileName = Path.GetTempFileName();
+            string[] lines = {"[global]", $"color={value}", "name=sam"};
             File.WriteAllLines(fileName, lines, Encoding.Unicode);
 
             // Create a new IniFile with the temp file name
@@ -176,7 +174,7 @@ namespace IniUtilsTest
 
             // Verify that all the settings were returned
             settings.Should()
-                .BeEquivalentTo(new List<Setting>()
+                .BeEquivalentTo(new List<Setting>
                 {
                     new Setting("color", expected ?? value),
                     new Setting("name", "sam")
@@ -215,7 +213,7 @@ namespace IniUtilsTest
         public void CanWriteASetting(string value)
         {
             // Create a new temporary file to get a temp file name and delete it
-            string fileName = Path.GetTempFileName();
+            var fileName = Path.GetTempFileName();
             File.Delete(fileName);
 
             // Create a new IniFile with the temp file name
@@ -225,7 +223,7 @@ namespace IniUtilsTest
             iniFile.WriteSetting("global", new Setting("color", value));
 
             // Verify that the file contains the setting we just wrote
-            File.ReadAllLines(fileName).Should().Contain(new[] { "[global]", $"color={value}" });
+            File.ReadAllLines(fileName).Should().Contain(new[] {"[global]", $"color={value}"});
 
             // Clean up after ourselves
             File.Delete(fileName);
@@ -260,7 +258,7 @@ namespace IniUtilsTest
         public void CanWriteSettingsToASection(string value)
         {
             // Create a new temporary file to get a temp file name and delete it
-            string fileName = Path.GetTempFileName();
+            var fileName = Path.GetTempFileName();
             File.Delete(fileName);
 
             // Create a new IniFile with the temp file name
@@ -280,7 +278,7 @@ namespace IniUtilsTest
             iniFile.WriteSettings("global", settings);
 
             // Verify that the file contains the settings
-            File.ReadAllLines(fileName).Should().Contain(new[] { "[global]", $"color={value}", "name=sam", "audio=off" });
+            File.ReadAllLines(fileName).Should().Contain(new[] {"[global]", $"color={value}", "name=sam", "audio=off"});
 
             // Clean up after ourselves
             File.Delete(fileName);
@@ -315,7 +313,7 @@ namespace IniUtilsTest
         public void DefaultIsReturnedIfNotFound(string value)
         {
             // Create a simple ini file with one value
-            string fileName = Path.GetTempFileName();
+            var fileName = Path.GetTempFileName();
 
             // Create a new IniFile with the temp file name
             var iniFile = new IniFile(fileName);
@@ -334,8 +332,8 @@ namespace IniUtilsTest
         public void ReadWithNullNameThrowsException()
         {
             // Create a simple ini file with one value
-            string fileName = Path.GetTempFileName();
-            string[] lines = { "[global]", "color=purple" };
+            var fileName = Path.GetTempFileName();
+            string[] lines = {"[global]", "color=purple"};
             File.WriteAllLines(fileName, lines, Encoding.Unicode);
 
             // Create a new IniFile with the temp file name
@@ -355,7 +353,7 @@ namespace IniUtilsTest
         public void WriteWithNullNameThrowsException()
         {
             // Create a new temporary file to get a temp file name and delete it
-            string fileName = Path.GetTempFileName();
+            var fileName = Path.GetTempFileName();
 
             // Create a new IniFile with the temp file name
             var iniFile = new IniFile(fileName);
@@ -374,7 +372,7 @@ namespace IniUtilsTest
         public void WriteWithNullValueThrowsException()
         {
             // Create a new temporary file to get a temp file name and delete it
-            string fileName = Path.GetTempFileName();
+            var fileName = Path.GetTempFileName();
 
             // Create a new IniFile with the temp file name
             var iniFile = new IniFile(fileName);
@@ -393,7 +391,7 @@ namespace IniUtilsTest
         public void WritingASettingCreatesANewFile()
         {
             // Create a new temporary file to get a temp file name and delete it
-            string fileName = Path.GetTempFileName();
+            var fileName = Path.GetTempFileName();
             File.Delete(fileName);
 
             // Verify that the file isn't there
@@ -411,7 +409,5 @@ namespace IniUtilsTest
             // Clean up after ourselves
             File.Delete(fileName);
         }
-
-        #endregion Public Methods
     }
 }

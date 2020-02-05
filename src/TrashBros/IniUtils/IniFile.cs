@@ -1,7 +1,7 @@
 /*
 IniFile.cs
 
-Provies a class to read and write settigns to INI files.
+Provides a class to read and write settings to INI files.
 
 Copyright (C) 2020 Trash Bros (BlinkTheThings, Reakain)
 
@@ -31,28 +31,24 @@ using System.Text.RegularExpressions;
 namespace TrashBros.IniUtils
 {
     /// <summary>
-    /// Read and write settigns to an INI file.
+    ///     Read and write settings to an INI file.
     /// </summary>
     public class IniFile
     {
-        #region Private Fields
+        #region Public Constructors
 
         /// <summary>
-        /// A regex that should match a any setting
+        ///     Initializes a new instance of the <see cref="IniFile" /> class using the specified file name.
         /// </summary>
-        private static readonly Regex AnyNameValueRegex = new Regex(@"^\s*(.*?\S)\s*=\s*(.*)$");
+        /// <param name="fileName">Name of the INI file.</param>
+        public IniFile(string fileName)
+        {
+            _fileName = fileName;
 
-        /// <summary>
-        /// A regex that should match any section
-        /// </summary>
-        private static readonly Regex AnySectionRegex = new Regex(@"^\s*\[\s*(.*)\s*\].*$");
+            ConvertFileToUnicodeEncoding();
+        }
 
-        /// <summary>
-        /// INI file name.
-        /// </summary>
-        private readonly string _fileName;
-
-        #endregion Private Fields
+        #endregion Public Constructors
 
         #region Private Enums
 
@@ -65,21 +61,40 @@ namespace TrashBros.IniUtils
 
         #endregion Private Enums
 
+        #region Private Fields
+
+        /// <summary>
+        ///     A regex that should match a any setting
+        /// </summary>
+        private static readonly Regex AnyNameValueRegex = new Regex(@"^\s*(.*?\S)\s*=\s*(.*)$");
+
+        /// <summary>
+        ///     A regex that should match any section
+        /// </summary>
+        private static readonly Regex AnySectionRegex = new Regex(@"^\s*\[\s*(.*)\s*\].*$");
+
+        /// <summary>
+        ///     INI file name.
+        /// </summary>
+        private readonly string _fileName;
+
+        #endregion Private Fields
+
         #region Private Methods
 
         /// <summary>
-        /// Thrown an exception if <paramref name="arg"/> is null.
+        ///     Thrown an exception if <paramref name="arg" /> is null.
         /// </summary>
         /// <param name="arg">The argument.</param>
         /// <param name="argName">Name of the argument.</param>
-        /// <exception cref="ArgumentNullException">If <paramref name="arg"/> is null.</exception>
+        /// <exception cref="ArgumentNullException">If <paramref name="arg" /> is null.</exception>
         private static void ThrowExceptionIfNull(object arg, string argName)
         {
             _ = arg ?? throw new ArgumentNullException(argName);
         }
 
         /// <summary>
-        /// Converts the file to Unicode encoding if it isn't already.
+        ///     Converts the file to Unicode encoding if it isn't already.
         /// </summary>
         private void ConvertFileToUnicodeEncoding()
         {
@@ -99,7 +114,7 @@ namespace TrashBros.IniUtils
                             using (var writer = new StreamWriter(tempFile, false, Encoding.Unicode))
                             {
                                 int charsRead;
-                                char[] buffer = new char[1024];
+                                var buffer = new char[1024];
                                 while ((charsRead = reader.ReadBlock(buffer, 0, buffer.Length)) > 0)
                                 {
                                     writer.Write(buffer, 0, charsRead);
@@ -107,6 +122,7 @@ namespace TrashBros.IniUtils
                             }
                         }
                     }
+
                     if (tempFile != null)
                     {
                         File.Delete(_fileName);
@@ -129,25 +145,10 @@ namespace TrashBros.IniUtils
 
         #endregion Private Methods
 
-        #region Public Constructors
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="IniFile"/> class using the specified file name.
-        /// </summary>
-        /// <param name="fileName">Name of the INI file.</param>
-        public IniFile(string fileName)
-        {
-            _fileName = fileName;
-
-            ConvertFileToUnicodeEncoding();
-        }
-
-        #endregion Public Constructors
-
         #region Public Methods
 
         /// <summary>
-        /// Delete a setting from the specified section.
+        ///     Delete a setting from the specified section.
         /// </summary>
         /// <param name="section">The section.</param>
         /// <param name="name">The setting name.</param>
@@ -159,13 +160,13 @@ namespace TrashBros.IniUtils
             ThrowExceptionIfNull(name, nameof(name));
 
             // A regex that will match the specified section
-            Regex specificSectionRegex = new Regex($@"^\s*\[\s*({section})\s*\].*$");
+            var specificSectionRegex = new Regex($@"^\s*\[\s*({section})\s*\].*$");
 
             // A regex that will match a setting with a specific name
-            Regex specificNameValueRegex = new Regex($@"^\s*({name})\s*=.*$");
+            var specificNameValueRegex = new Regex($@"^\s*({name})\s*=.*$");
 
             // First we look for the section
-            ParserState parserState = ParserState.LookingForSection;
+            var parserState = ParserState.LookingForSection;
 
             // Create a memory stream to store the new file
             var ms = new MemoryStream();
@@ -175,7 +176,7 @@ namespace TrashBros.IniUtils
             {
                 while (!reader.EndOfStream)
                 {
-                    string line = reader.ReadLine();
+                    var line = reader.ReadLine();
 
                     if (line == null) continue;
 
@@ -190,6 +191,7 @@ namespace TrashBros.IniUtils
                                 // Now look for the setting in this section
                                 parserState = ParserState.LookingForSetting;
                             }
+
                             writer.WriteLine(line);
                             break;
 
@@ -206,6 +208,7 @@ namespace TrashBros.IniUtils
                                 // Not the right setting, keep on going
                                 writer.WriteLine(line);
                             }
+
                             break;
 
                         // We done looking for the setting, just write out the rest of the lines
@@ -221,40 +224,40 @@ namespace TrashBros.IniUtils
         }
 
         /// <summary>
-        /// Read the setting with the specified name in the specified section. If the setting does
-        /// not exist, <paramref name="defaultValue"/> will be returned.
+        ///     Read the setting with the specified name in the specified section. If the setting does
+        ///     not exist, <paramref name="defaultValue" /> will be returned.
         /// </summary>
         /// <param name="section">The section.</param>
         /// <param name="name">The name.</param>
         /// <param name="defaultValue">The default value.</param>
         /// <returns>
-        /// A setting with the value read from the file, or <paramref name="defaultValue"/> if the
-        /// setting is not found in the file.
+        ///     A setting with the value read from the file, or <paramref name="defaultValue" /> if the
+        ///     setting is not found in the file.
         /// </returns>
         /// <exception cref="ArgumentNullException">If section or name is null.</exception>
         public Setting ReadSetting(string section, string name, string defaultValue = "")
         {
-            // Make sure the seciton and name aren't null
+            // Make sure the section and name aren't null
             ThrowExceptionIfNull(section, nameof(section));
             ThrowExceptionIfNull(name, nameof(name));
 
             // Initialize the value to the default in case we don't find it
-            string value = defaultValue?.TrimEnd() ?? "";
+            var value = defaultValue?.TrimEnd() ?? "";
 
             // A regex that will match the specified section
-            Regex specificSectionRegex = new Regex($@"^\s*\[\s*({section})\s*\].*$");
+            var specificSectionRegex = new Regex($@"^\s*\[\s*({section})\s*\].*$");
 
             // A regex that will match a setting with a specific name
-            Regex specificNameValueRegex = new Regex($@"^\s*({name})\s*=\s*(.*\S)\s*$");
+            var specificNameValueRegex = new Regex($@"^\s*({name})\s*=\s*(.*\S)\s*$");
 
             // First we look for the section
-            ParserState parserState = ParserState.LookingForSection;
+            var parserState = ParserState.LookingForSection;
 
             // Read all the file lines
-            string[] lines = File.ReadAllLines(_fileName, Encoding.Unicode);
+            var lines = File.ReadAllLines(_fileName, Encoding.Unicode);
 
             // Check the lines one at a time and try and find the setting in specified section
-            foreach (string line in lines)
+            foreach (var line in lines)
             {
                 switch (parserState)
                 {
@@ -267,6 +270,7 @@ namespace TrashBros.IniUtils
                             // Now look for the setting in this section
                             parserState = ParserState.LookingForSetting;
                         }
+
                         break;
 
                     // We are looking for the specific setting
@@ -302,6 +306,7 @@ namespace TrashBros.IniUtils
                             // We found the setting, we can stop looking now
                             parserState = ParserState.DoneLooking;
                         }
+
                         break;
                 }
 
@@ -317,81 +322,65 @@ namespace TrashBros.IniUtils
         }
 
         /// <summary>
-        /// Read all the settings from the specified section.
+        ///     Read all the settings from the specified section.
         /// </summary>
         /// <param name="section">The section.</param>
-        /// <returns>A list of settings read from <paramref name="section"/>.</returns>
+        /// <returns>A list of settings read from <paramref name="section" />.</returns>
         public List<Setting> ReadSettings(string section)
         {
             // Initialize list of settings
             var settings = new List<Setting>();
 
             // A regex that will match the specified section
-            Regex specificSectionRegex = new Regex($@"^\s*\[\s*({section})\s*\].*$");
+            var specificSectionRegex = new Regex($@"^\s*\[\s*({section})\s*\].*$");
 
             // First we look for the section
-            ParserState parserState = ParserState.LookingForSection;
+            var parserState = ParserState.LookingForSection;
 
             // Read all the file lines
-            string[] lines = File.ReadAllLines(_fileName, Encoding.Unicode);
+            var lines = File.ReadAllLines(_fileName, Encoding.Unicode);
 
             // Check the lines one at a time and try and find the setting in specified section
-            foreach (string line in lines)
+            foreach (var line in lines)
             {
-                switch (parserState)
+                if (parserState == ParserState.LookingForSection)
                 {
-                    // We are looking for the specific section
-                    case ParserState.LookingForSection:
-
-                        // Is this the right section?
-                        if (specificSectionRegex.IsMatch(line))
-                        {
-                            // Now look for the settings in this section
-                            parserState = ParserState.LookingForSetting;
-                        }
-                        break;
-
-                    // We are looking for settings in this seciton now
-                    case ParserState.LookingForSetting:
-
-                        // Is this the start of a new section?
-                        if (AnySectionRegex.IsMatch(line))
-                        {
-                            // We have encountered a new section without finding the setting We can
-                            // stop looking now
-                            parserState = ParserState.DoneLooking;
-                        }
-                        // Is this a setting?
-                        else if (AnyNameValueRegex.IsMatch(line))
-                        {
-                            // Grab the name and value using the regex
-                            var matches = AnyNameValueRegex.Matches(line);
-                            string name = matches[0].Groups[1].Value.TrimEnd();
-                            string value = matches[0].Groups[2].Value.TrimEnd();
-
-                            // Check for outer single quotes
-                            if (value.Length > 1 && value[0] == '\'' && value[value.Length - 1] == '\'')
-                            {
-                                // Remove outer single quotes
-                                value = value.Substring(1, value.Length - 2);
-                            }
-                            // Check for outer double quotes
-                            else if (value.Length > 1 && value[0] == '\"' && value[value.Length - 1] == '\"')
-                            {
-                                // Remove outer double quotes
-                                value = value.Substring(1, value.Length - 2);
-                            }
-
-                            // Add the setting to the list
-                            settings.Add(new Setting(name, value));
-                        }
-                        break;
+                    // Is this the right section?
+                    if (specificSectionRegex.IsMatch(line))
+                    {
+                        // Now look for the settings in this section
+                        parserState = ParserState.LookingForSetting;
+                    }
                 }
-
-                // We can stop looping through the lines if we are done.
-                if (parserState == ParserState.DoneLooking)
+                else if (parserState == ParserState.LookingForSetting)
                 {
-                    break;
+                    // If we have encountered a new section without finding the setting We can
+                    // stop looking now
+                    if (AnySectionRegex.IsMatch(line)) break;
+
+                    // If this isn't a setting move on to the next line
+                    if (!AnyNameValueRegex.IsMatch(line)) continue;
+
+                    // Grab the name and value using the regex
+                    var matches = AnyNameValueRegex.Matches(line);
+                    var name = matches[0].Groups[1].Value.TrimEnd();
+                    var value = matches[0].Groups[2].Value.TrimEnd();
+
+                    // Check for outer single quotes
+                    if (value.Length > 1 && value[0] == '\'' && value[value.Length - 1] == '\'')
+                    {
+                        // Remove outer single quotes
+                        value = value.Substring(1, value.Length - 2);
+                    }
+                    // Check for outer double quotes
+                    else if (value.Length > 1 && value[0] == '\"' && value[value.Length - 1] == '\"')
+                    {
+                        // Remove outer double quotes
+                        value = value.Substring(1, value.Length - 2);
+                    }
+
+                    // Add the setting to the list
+                    settings.Add(new Setting(name, value));
                 }
             }
 
@@ -400,28 +389,28 @@ namespace TrashBros.IniUtils
         }
 
         /// <summary>
-        /// Write a setting to the specified section.
+        ///     Write a setting to the specified section.
         /// </summary>
         /// <param name="section">The section.</param>
         /// <param name="setting">The setting.</param>
         /// <exception cref="ArgumentNullException">
-        /// If section, setting, setting.Name, or setting.Value is null.
+        ///     If section, setting, setting.Name, or setting.Value is null.
         /// </exception>
         public void WriteSetting(string section, Setting setting)
         {
-            // Make sure section and settting isn't null
+            // Make sure section and setting isn't null
             ThrowExceptionIfNull(section, nameof(section));
             ThrowExceptionIfNull(setting.Name, nameof(setting.Name));
             ThrowExceptionIfNull(setting.Value, nameof(setting.Value));
 
             // A regex that will match the specified section
-            Regex specificSectionRegex = new Regex($@"^\s*\[\s*({section})\s*\].*$");
+            var specificSectionRegex = new Regex($@"^\s*\[\s*({section})\s*\].*$");
 
             // A regex that will match a setting with a specific name
-            Regex specificNameValueRegex = new Regex($@"^\s*({setting.Name})\s*=.*$");
+            var specificNameValueRegex = new Regex($@"^\s*({setting.Name})\s*=.*$");
 
             // First we look for the section
-            ParserState parserState = ParserState.LookingForSection;
+            var parserState = ParserState.LookingForSection;
 
             // Create a memory stream to store the new file
             var ms = new MemoryStream();
@@ -431,7 +420,7 @@ namespace TrashBros.IniUtils
             {
                 while (!reader.EndOfStream)
                 {
-                    string line = reader.ReadLine();
+                    var line = reader.ReadLine();
 
                     if (line == null) continue;
 
@@ -446,6 +435,7 @@ namespace TrashBros.IniUtils
                                 // Now look for the setting in this section
                                 parserState = ParserState.LookingForSetting;
                             }
+
                             writer.WriteLine(line);
                             break;
 
@@ -478,6 +468,7 @@ namespace TrashBros.IniUtils
                                 // Not the right setting, keep on going
                                 writer.WriteLine(line);
                             }
+
                             break;
 
                         // We done looking for the setting, just write out the rest of the lines
@@ -490,7 +481,7 @@ namespace TrashBros.IniUtils
                 // If we didn't find the section
                 if (parserState == ParserState.LookingForSection)
                 {
-                    // Write the seciton
+                    // Write the section
                     writer.WriteLine("");
                     writer.WriteLine($"[{section.Trim()}]");
 
@@ -505,21 +496,21 @@ namespace TrashBros.IniUtils
         }
 
         /// <summary>
-        /// Writes a list of settings to the specified section.
+        ///     Writes a list of settings to the specified section.
         /// </summary>
         /// <param name="section">The section.</param>
         /// <param name="settings">The settings.</param>
         public void WriteSettings(string section, List<Setting> settings)
         {
-            // Make sure section and setttings isn't null
+            // Make sure section and settings isn't null
             ThrowExceptionIfNull(section, nameof(section));
             ThrowExceptionIfNull(settings, nameof(settings));
 
             // A regex that will match the specified section
-            Regex specificSectionRegex = new Regex($@"^\s*\[\s*({section})\s*\].*$");
+            var specificSectionRegex = new Regex($@"^\s*\[\s*({section})\s*\].*$");
 
             // First we look for the section
-            ParserState parserState = ParserState.LookingForSection;
+            var parserState = ParserState.LookingForSection;
 
             // Create a copy of the settings
             var remainingSettings = new List<Setting>(settings.ToArray());
@@ -532,7 +523,7 @@ namespace TrashBros.IniUtils
             {
                 while (!reader.EndOfStream)
                 {
-                    string line = reader.ReadLine();
+                    var line = reader.ReadLine();
 
                     if (line == null) continue;
 
@@ -547,6 +538,7 @@ namespace TrashBros.IniUtils
                                 // Now look for the setting in this section
                                 parserState = ParserState.LookingForSetting;
                             }
+
                             writer.WriteLine(line);
                             break;
 
@@ -563,6 +555,7 @@ namespace TrashBros.IniUtils
                                 {
                                     writer.WriteLine(setting);
                                 }
+
                                 writer.WriteLine("");
 
                                 writer.WriteLine(line);
@@ -573,13 +566,13 @@ namespace TrashBros.IniUtils
                             {
                                 // Grab the name and value using the regex
                                 var matches = AnyNameValueRegex.Matches(line);
-                                string name = matches[0].Groups[1].Value.TrimEnd();
+                                var name = matches[0].Groups[1].Value.TrimEnd();
 
                                 // Do any of the remaining settings match?
                                 if (remainingSettings.Any(s => s.Name == name))
                                 {
                                     // Update the setting
-                                    Setting setting = remainingSettings.Last(s => s.Name == name);
+                                    var setting = remainingSettings.Last(s => s.Name == name);
                                     writer.WriteLine(setting);
 
                                     // Remove it from the list
@@ -596,6 +589,7 @@ namespace TrashBros.IniUtils
                                 // Not a setting, keep on going
                                 writer.WriteLine(line);
                             }
+
                             break;
 
                         // We done looking for the setting, just write out the rest of the lines
@@ -608,7 +602,7 @@ namespace TrashBros.IniUtils
                 // If we didn't find the section
                 if (parserState == ParserState.LookingForSection)
                 {
-                    // Write the seciton
+                    // Write the section
                     writer.WriteLine("");
                     writer.WriteLine($"[{section.Trim()}]");
 
@@ -617,6 +611,7 @@ namespace TrashBros.IniUtils
                     {
                         writer.WriteLine(setting);
                     }
+
                     writer.WriteLine("");
                 }
                 // Else if we found the section
@@ -627,6 +622,7 @@ namespace TrashBros.IniUtils
                     {
                         writer.WriteLine(setting);
                     }
+
                     writer.WriteLine("");
                 }
             }

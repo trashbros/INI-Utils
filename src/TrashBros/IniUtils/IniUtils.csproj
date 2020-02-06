@@ -5,6 +5,12 @@
     <AssemblyName>TrashBros.IniUtils</AssemblyName>
     <RootNamespace>TrashBros.IniUtils</RootNamespace>
     <Authors>TrashBros</Authors>
+    <PackageLicenseFile>LICENSE</PackageLicenseFile>
+    <Description>Library for reading and writing INI files.</Description>
+    <Copyright>Copyright (C) 2020 Trash Bros (BlinkTheThings, Reakain)</Copyright>
+    <RepositoryUrl>https://github.com/trashbros/INI-Utils</RepositoryUrl>
+    <PackageReleaseNotes>Initial release.</PackageReleaseNotes>
+    <RepositoryType>git</RepositoryType>
   </PropertyGroup>
 
   <ItemGroup>
@@ -12,6 +18,13 @@
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="..\..\..\LICENSE">
+      <Pack>True</Pack>
+      <PackagePath></PackagePath>
+    </None>
   </ItemGroup>
 
 </Project>

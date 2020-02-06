@@ -14,4 +14,5 @@ jobs:
       with:
         dotnet-version: 2.2.108
     - name: Test
+      working-directory: ./src/TrashBros/IniUtils
       run: dotnet test --configuration Release

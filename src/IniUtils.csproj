@@ -11,6 +11,7 @@
     <RepositoryUrl>https://github.com/trashbros/INI-Utils</RepositoryUrl>
     <PackageReleaseNotes>Initial release.</PackageReleaseNotes>
     <RepositoryType>git</RepositoryType>
+    <OutputPath>..\artifacts\bin\$(Configuration)</OutputPath>
   </PropertyGroup>
 
   <ItemGroup>
@@ -21,7 +22,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Include="..\..\..\LICENSE">
+    <None Include="..\LICENSE">
       <Pack>True</Pack>
       <PackagePath></PackagePath>
     </None>

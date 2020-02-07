@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <TargetFramework>netcoreapp3.1</TargetFramework>
-
+    <OutputPath>..\artifacts\bin\$(Configuration)</OutputPath>
     <IsPackable>false</IsPackable>
   </PropertyGroup>
 
@@ -21,7 +21,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\IniUtils\IniUtils.csproj" />
+    <ProjectReference Include="..\src\IniUtils.csproj" />
   </ItemGroup>
 
 </Project>

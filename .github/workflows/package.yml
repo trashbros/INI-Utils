@@ -28,7 +28,7 @@ jobs:
             </packageSources>
             <packageSourceCredentials>
               <github>
-                <add key="Username" value=\"${{ GITHUB_ACTOR }}\" />
+                <add key="Username" value=\"${{ github.actor }}\" />
                 <add key="ClearTextPassword" value=\"${{ secrets.GITHUB_TOKEN }}\" />
               </github>
             </packageSourceCredentials>

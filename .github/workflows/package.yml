@@ -20,7 +20,7 @@ jobs:
       run: dotnet pack --configuration Release
     - name: Publish
       run: |
-        cat > nuget.config <<-EOM <?xml version=\"1.0\" encoding=\"utf-8\"?>
+        echo "<?xml version=\"1.0\" encoding=\"utf-8\"?>
           <configuration>
             <packageSources>
               <clear />
@@ -32,6 +32,5 @@ jobs:
                 <add key="ClearTextPassword" value=\"${{ secrets.GITHUB_TOKEN }}\" />
               </github>
             </packageSourceCredentials>
-          </configuration>
-EOM
+          </configuration>" > nuget.config
         dotnet nuget push "./artifacts/bin/Release/TrashBros.IniUtils.${{ steps.tagName.outputs.tag }}.nupkg" --source "github"

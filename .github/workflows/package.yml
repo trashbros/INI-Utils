@@ -33,5 +33,5 @@ jobs:
               </github>
             </packageSourceCredentials>
           </configuration>
-          EOM
+EOM
         dotnet nuget push "./artifacts/bin/Release/TrashBros.IniUtils.${{ steps.tagName.outputs.tag }}.nupkg" --source "github"

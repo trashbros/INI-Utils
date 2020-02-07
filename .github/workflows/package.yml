@@ -20,19 +20,19 @@ jobs:
       run: dotnet pack --configuration Release
     - name: Publish
       run: |
-        echo "<?xml version=\"1.0\" encoding=\"utf-8\"?>
+        echo "<?xml version=`"1.0`" encoding=`"utf-8`"?>
           <configuration>
             <packageSources>
               <clear />
-              <add key=\"github\" value=\"https://nuget.pkg.github.com/trashbros/index.json\" />
+              <add key=`"github`" value=`"https://nuget.pkg.github.com/trashbros/index.json`" />
             </packageSources>
             <apikeys>
-              <add key=\"https://nuget.pkg.github.com/trashbros/index.json\" value=\"${{ secrets.GITHUB_TOKEN }}\" />
+              <add key=`"https://nuget.pkg.github.com/trashbros/index.json`" value=`"${{ secrets.GITHUB_TOKEN }}`" />
             </apikeys>
             <packageSourceCredentials>
               <github>
-                <add key=\"Username\" value=\"${{ github.actor }}\" />
-                <add key=\"ClearTextPassword\" value=\"${{ secrets.GITHUB_TOKEN }}\" />
+                <add key=`"Username`" value=`"${{ github.actor }}`" />
+                <add key=`"ClearTextPassword`" value=`"${{ secrets.GITHUB_TOKEN }}`" />
               </github>
             </packageSourceCredentials>
           </configuration>" > nuget.config

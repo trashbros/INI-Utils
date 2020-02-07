@@ -26,6 +26,9 @@ jobs:
               <clear />
               <add key=\"github\" value=\"https://nuget.pkg.github.com/trashbros/index.json\" />
             </packageSources>
+            <apikeys>
+              <add key=\"https://nuget.pkg.github.com/trashbros/index.json\" value=\"${{ secrets.GITHUB_TOKEN }}\" />
+            </apikeys>
             <packageSourceCredentials>
               <github>
                 <add key=\"Username\" value=\"${{ github.actor }}\" />

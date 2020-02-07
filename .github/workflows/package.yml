@@ -28,8 +28,8 @@ jobs:
             </packageSources>
             <packageSourceCredentials>
               <github>
-                <add key="Username" value=\"${{ github.actor }}\" />
-                <add key="ClearTextPassword" value=\"${{ secrets.GITHUB_TOKEN }}\" />
+                <add key=\"Username\" value=\"${{ github.actor }}\" />
+                <add key=\"ClearTextPassword\" value=\"${{ secrets.GITHUB_TOKEN }}\" />
               </github>
             </packageSourceCredentials>
           </configuration>" > nuget.config

@@ -18,5 +18,20 @@ jobs:
         dotnet-version: 3.0.100
     - name: Pack
       run: dotnet pack --configuration Release
-    - name: Publush
-      run: dotnet nuget push "./artifacts/bin/Release/TrashBros.IniUtils.${{ steps.tagName.outputs.tag }}.nupkg" --source "github"
+    - name: Publish
+      run: |
+        cat > nuget.config <<-EOM <?xml version=\"1.0\" encoding=\"utf-8\"?>
+          <configuration>
+            <packageSources>
+              <clear />
+              <add key=\"github\" value=\"https://nuget.pkg.github.com/trashbros/index.json\" />
+            </packageSources>
+            <packageSourceCredentials>
+              <github>
+                <add key="Username" value=\"${{ GITHUB_ACTOR }}\" />
+                <add key="ClearTextPassword" value=\"${{ secrets.GITHUB_TOKEN }}\" />
+              </github>
+            </packageSourceCredentials>
+          </configuration>
+          EOM
+        dotnet nuget push "./artifacts/bin/Release/TrashBros.IniUtils.${{ steps.tagName.outputs.tag }}.nupkg" --source "github"

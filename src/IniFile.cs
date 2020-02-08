@@ -35,34 +35,6 @@ namespace TrashBros.IniUtils
     /// </summary>
     public class IniFile
     {
-        #region Public Constructors
-
-        /// <summary>
-        ///     Initializes a new instance of the <see cref="IniFile" /> class using the specified file name.
-        /// </summary>
-        /// <param name="fileName">Name of the INI file.</param>
-        public IniFile(string fileName)
-        {
-            _fileName = fileName;
-
-            ConvertFileToUnicodeEncoding();
-        }
-
-        #endregion Public Constructors
-
-        #region Private Enums
-
-        private enum ParserState
-        {
-            LookingForSection,
-            LookingForSetting,
-            DoneLooking
-        }
-
-        #endregion Private Enums
-
-        #region Private Fields
-
         /// <summary>
         ///     A regex that should match a any setting
         /// </summary>
@@ -78,16 +50,31 @@ namespace TrashBros.IniUtils
         /// </summary>
         private readonly string _fileName;
 
-        #endregion Private Fields
+        /// <summary>
+        ///     Initializes a new instance of the <see cref="IniFile" /> class using the specified file name.
+        /// </summary>
+        /// <param name="fileName">
+        ///     Name of the INI file.
+        /// </param>
+        public IniFile(string fileName)
+        {
+            _fileName = fileName;
 
-        #region Private Methods
+            ConvertFileToUnicodeEncoding();
+        }
 
         /// <summary>
         ///     Thrown an exception if <paramref name="arg" /> is null.
         /// </summary>
-        /// <param name="arg">The argument.</param>
-        /// <param name="argName">Name of the argument.</param>
-        /// <exception cref="ArgumentNullException">If <paramref name="arg" /> is null.</exception>
+        /// <param name="arg">
+        ///     The argument.
+        /// </param>
+        /// <param name="argName">
+        ///     Name of the argument.
+        /// </param>
+        /// <exception cref="ArgumentNullException">
+        ///     If <paramref name="arg" /> is null.
+        /// </exception>
         private static void ThrowExceptionIfNull(object arg, string argName)
         {
             _ = arg ?? throw new ArgumentNullException(argName);
@@ -143,16 +130,18 @@ namespace TrashBros.IniUtils
             }
         }
 
-        #endregion Private Methods
-
-        #region Public Methods
-
         /// <summary>
         ///     Delete a setting from the specified section.
         /// </summary>
-        /// <param name="section">The section.</param>
-        /// <param name="name">The setting name.</param>
-        /// <exception cref="ArgumentNullException">If section or name is null.</exception>
+        /// <param name="section">
+        ///     The section.
+        /// </param>
+        /// <param name="name">
+        ///     The setting name.
+        /// </param>
+        /// <exception cref="ArgumentNullException">
+        ///     If section or name is null.
+        /// </exception>
         public void DeleteSetting(string section, string name)
         {
             // Make sure the section and name aren't null
@@ -227,14 +216,22 @@ namespace TrashBros.IniUtils
         ///     Read the setting with the specified name in the specified section. If the setting does
         ///     not exist, <paramref name="defaultValue" /> will be returned.
         /// </summary>
-        /// <param name="section">The section.</param>
-        /// <param name="name">The name.</param>
-        /// <param name="defaultValue">The default value.</param>
+        /// <param name="section">
+        ///     The section.
+        /// </param>
+        /// <param name="name">
+        ///     The name.
+        /// </param>
+        /// <param name="defaultValue">
+        ///     The default value.
+        /// </param>
         /// <returns>
         ///     A setting with the value read from the file, or <paramref name="defaultValue" /> if the
         ///     setting is not found in the file.
         /// </returns>
-        /// <exception cref="ArgumentNullException">If section or name is null.</exception>
+        /// <exception cref="ArgumentNullException">
+        ///     If section or name is null.
+        /// </exception>
         public Setting ReadSetting(string section, string name, string defaultValue = "")
         {
             // Make sure the section and name aren't null
@@ -324,8 +321,12 @@ namespace TrashBros.IniUtils
         /// <summary>
         ///     Read all the settings from the specified section.
         /// </summary>
-        /// <param name="section">The section.</param>
-        /// <returns>A list of settings read from <paramref name="section" />.</returns>
+        /// <param name="section">
+        ///     The section.
+        /// </param>
+        /// <returns>
+        ///     A list of settings read from <paramref name="section" />.
+        /// </returns>
         public List<Setting> ReadSettings(string section)
         {
             // Initialize list of settings
@@ -391,8 +392,12 @@ namespace TrashBros.IniUtils
         /// <summary>
         ///     Write a setting to the specified section.
         /// </summary>
-        /// <param name="section">The section.</param>
-        /// <param name="setting">The setting.</param>
+        /// <param name="section">
+        ///     The section.
+        /// </param>
+        /// <param name="setting">
+        ///     The setting.
+        /// </param>
         /// <exception cref="ArgumentNullException">
         ///     If section, setting, setting.Name, or setting.Value is null.
         /// </exception>
@@ -498,8 +503,12 @@ namespace TrashBros.IniUtils
         /// <summary>
         ///     Writes a list of settings to the specified section.
         /// </summary>
-        /// <param name="section">The section.</param>
-        /// <param name="settings">The settings.</param>
+        /// <param name="section">
+        ///     The section.
+        /// </param>
+        /// <param name="settings">
+        ///     The settings.
+        /// </param>
         public void WriteSettings(string section, List<Setting> settings)
         {
             // Make sure section and settings isn't null
@@ -631,6 +640,85 @@ namespace TrashBros.IniUtils
             File.WriteAllBytes(_fileName, ms.ToArray());
         }
 
-        #endregion Public Methods
+        /// <summary>
+        ///     Determines whether the INI file has the specified section.
+        /// </summary>
+        /// <param name="section">
+        ///     The section.
+        /// </param>
+        /// <returns>
+        ///     <c>
+        ///         true
+        ///     </c>
+        ///     if the INI file has has <paramref name="section" />; otherwise,
+        ///     <c>
+        ///         false
+        ///     </c>
+        ///     .
+        /// </returns>
+        public bool HasSection(string section)
+        {
+            // A regex that will match the specified section
+            var specificSectionRegex = new Regex($@"^\s*\[\s*({section})\s*\].*$");
+
+            // Read all the file lines
+            var lines = File.ReadAllLines(_fileName, Encoding.Unicode);
+
+            // Check to see if any of the lines contains the specified section
+            return lines.Any(line => specificSectionRegex.IsMatch(line));
+        }
+
+        /// <summary>
+        ///     Get the section names from the INI file
+        /// </summary>
+        /// <returns>
+        ///     The section names.
+        /// </returns>
+        public List<string> SectionNames()
+        {
+            // Initialize list of sections
+            var sectionNames = new List<string>();
+
+            // Read all the file lines
+            var lines = File.ReadAllLines(_fileName, Encoding.Unicode);
+
+            // Check the lines one at a time and try and find the setting in specified section
+            foreach (var line in lines)
+            {
+                if (AnySectionRegex.IsMatch(line))
+                {
+                    // Grab the value using the regex
+                    var matches = AnySectionRegex.Matches(line);
+                    var name = matches[0].Groups[1].Value.Trim();
+
+                    // Check for outer single quotes
+                    if (name.Length > 1 && name[0] == '\'' && name[name.Length - 1] == '\'')
+                    {
+                        // Remove outer single quotes
+                        name = name.Substring(1, name.Length - 2);
+                    }
+                    // Check for outer double quotes
+                    else if (name.Length > 1 && name[0] == '\"' && name[name.Length - 1] == '\"')
+                    {
+                        // Remove outer double quotes
+                        name = name.Substring(1, name.Length - 2);
+                    }
+
+                    sectionNames.Add(name);
+                }
+            }
+
+            return sectionNames;
+        }
+
+        /// <summary>
+        ///     States used while parsing lines in the file.
+        /// </summary>
+        private enum ParserState
+        {
+            LookingForSection,
+            LookingForSetting,
+            DoneLooking
+        }
     }
 }

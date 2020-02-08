@@ -328,6 +328,65 @@ namespace IniUtilsTest
             File.Delete(fileName);
         }
 
+        [Theory]
+        [InlineData("global", true)]
+        [InlineData("one", true)]
+        [InlineData("key", false)]
+        [InlineData("value", false)]
+        [InlineData("color", false)]
+        [InlineData("purple", false)]
+        [InlineData("", false)]
+        public void CanCheckIfFileHasASection(string section, bool expected)
+        {
+            // Create a simple ini file with one value
+            var fileName = Path.GetTempFileName();
+            string[] lines = {"[global]", "color=purple", "[one]", "key=value"};
+            File.WriteAllLines(fileName, lines, Encoding.Unicode);
+
+            // Create a new IniFile with the temp file name
+            var iniFile = new IniFile(fileName);
+
+            // Verify that HasSection returns the right value
+            iniFile.HasSection(section).Should().Be(expected);
+        }
+
+        [Theory]
+        [InlineData("[global],[one],[two],[three]")]
+        [InlineData("[four],[five],[six],[seven]")]
+        [InlineData("[channel one],[channel two],[channel three],[channel four]")]
+        public void CanGetSectionNamesInAFile(string sectionList)
+        {
+            // Get sections from the section list
+            var sections = sectionList.Split(',');
+
+            // Get the expected names form the section list
+            var expected = sectionList.Replace("[", "").Replace("]", "").Split(',');
+
+            // Write the sections to a file
+            var fileName = Path.GetTempFileName();
+            File.WriteAllLines(fileName, sections, Encoding.Unicode);
+
+            // Create a new iniFile with the temp file name
+            var iniFile = new IniFile(fileName);
+
+            // Verify that all the sections are returned
+            iniFile.SectionNames().Should().BeEquivalentTo(expected);
+        }
+
+        [Fact]
+        public void EmptyFileHasNoSections()
+        {
+            // Create a new temporary file to get a temp file name and delete it
+            var fileName = Path.GetTempFileName();
+            File.Delete(fileName);
+
+            // Create a new iniFile with the temp file name
+            var iniFile = new IniFile(fileName);
+
+            // Since the file is empty it should have no sections
+            iniFile.SectionNames().Count.Should().Be(0);
+        }
+
         [Fact]
         public void ReadWithNullNameThrowsException()
         {
